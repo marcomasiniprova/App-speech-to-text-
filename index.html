@@ -31,7 +31,6 @@
     flex-direction: column;
   }
 
-  /* ── Header ── */
   header {
     padding: 16px 24px;
     border-bottom: 1px solid var(--border);
@@ -89,7 +88,6 @@
     cursor: pointer;
   }
 
-  /* ── Buttons ── */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -128,7 +126,6 @@
     flex-shrink: 0;
   }
 
-  /* ── Status bar ── */
   .status-bar {
     padding: 7px 24px;
     font-size: 12px;
@@ -153,7 +150,6 @@
     50% { opacity: 0.4; }
   }
 
-  /* ── Speaker names ── */
   .names-bar {
     padding: 10px 24px;
     border-bottom: 1px solid var(--border);
@@ -191,7 +187,6 @@
   }
   .name-input:focus { border-color: var(--accent); }
 
-  /* ── Main ── */
   main {
     flex: 1;
     padding: 20px 24px;
@@ -220,7 +215,6 @@
 
   .toolbar-actions { display: flex; gap: 8px; }
 
-  /* ── Transcript box ── */
   .transcript-box {
     flex: 1;
     background: var(--surface);
@@ -250,7 +244,6 @@
 
   .empty-icon { font-size: 44px; opacity: 0.25; }
 
-  /* ── Turn ── */
   .turn { display: flex; flex-direction: column; gap: 5px; }
 
   .turn-header {
@@ -286,7 +279,6 @@
     font-style: italic;
   }
 
-  /* speaker colour classes */
   .sp-0 .turn-badge { background: rgba(96,165,250,.15); color: var(--s0); }
   .sp-0 .turn-text  { border-color: var(--s0); }
   .sp-1 .turn-badge { background: rgba(251,146,60,.15); color: var(--s1); }
@@ -296,7 +288,6 @@
   .sp-3 .turn-badge { background: rgba(244,114,182,.15); color: var(--s3); }
   .sp-3 .turn-text  { border-color: var(--s3); }
 
-  /* ── Toast ── */
   .toast {
     position: fixed;
     bottom: 24px;
@@ -314,7 +305,6 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
 
-  /* ── Scrollbar ── */
   .transcript-box::-webkit-scrollbar { width: 5px; }
   .transcript-box::-webkit-scrollbar-track { background: transparent; }
   .transcript-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -322,7 +312,6 @@
 </head>
 <body>
 
-<!-- ── Header ── -->
 <header>
   <div class="logo">Cold Call <span>Transcriber</span></div>
   <div class="header-controls">
@@ -344,14 +333,12 @@
   </div>
 </header>
 
-<!-- ── Status bar ── -->
 <div class="status-bar">
   <div class="status-dot" id="statusDot"></div>
   <span id="statusText">Pronto — inserisci la API key Deepgram e premi Inizia</span>
   <span id="timer" style="margin-left:auto; font-variant-numeric: tabular-nums;"></span>
 </div>
 
-<!-- ── Speaker name editor ── -->
 <div class="names-bar">
   <span class="names-bar-label">Rinomina:</span>
   <div class="name-item">
@@ -372,7 +359,6 @@
   </div>
 </div>
 
-<!-- ── Main ── -->
 <main>
   <div class="transcript-toolbar">
     <div class="transcript-label">Trascrizione in tempo reale</div>
@@ -394,7 +380,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────
 let socket = null;
 let audioCtx = null;
 let processor = null;
@@ -403,23 +388,15 @@ let micStream = null;
 let recording = false;
 let recStart = null;
 let timerInterval = null;
-
-// turns = [{ speaker:0, text:'...', startSec:12.3 }]
 let turns = [];
-// interim state
 let interimSpeaker = 0;
 let interimText = '';
 
-const SPEAKER_COLORS = ['--s0','--s1','--s2','--s3'];
-
-// ── Persistence ────────────────────────────────────────────────────
 function loadPrefs() {
   const key = localStorage.getItem('dg_key');
   if (key) document.getElementById('apiKey').value = key;
-
   const lang = localStorage.getItem('dg_lang');
   if (lang) document.getElementById('langSelect').value = lang;
-
   for (let i = 0; i < 4; i++) {
     const n = localStorage.getItem(`sp_name_${i}`);
     if (n) document.getElementById(`name${i}`).value = n;
@@ -437,7 +414,6 @@ function getName(idx) {
   return v || `Speaker ${idx + 1}`;
 }
 
-// ── Recording toggle ───────────────────────────────────────────────
 function toggleRecording() {
   recording ? stopRecording() : startRecording();
 }
@@ -469,7 +445,6 @@ async function startRecording() {
     channels: '1',
   });
 
-  // Deepgram accepts token as sub-protocol for browser WebSocket auth
   socket = new WebSocket(`wss://api.deepgram.com/v1/listen?${params}`, ['token', apiKey]);
   socket.binaryType = 'arraybuffer';
 
@@ -486,17 +461,12 @@ async function startRecording() {
     let data;
     try { data = JSON.parse(ev.data); } catch { return; }
     if (data.type !== 'Results') return;
-
     const alt = data.channel?.alternatives?.[0];
     if (!alt || !alt.transcript) return;
-
     const words = alt.words || [];
     const spk = words.length > 0 ? (words[0].speaker ?? 0) : 0;
-
     if (data.is_final) {
-      if (alt.transcript.trim()) {
-        pushTurn(spk, alt.transcript.trim(), data.start ?? 0);
-      }
+      if (alt.transcript.trim()) pushTurn(spk, alt.transcript.trim(), data.start ?? 0);
       interimText = '';
       renderAll();
     } else {
@@ -509,7 +479,6 @@ async function startRecording() {
   socket.onerror = () => setStatus('Errore connessione Deepgram', 'err');
   socket.onclose = (ev) => {
     if (recording) {
-      // Unexpected close — show code for debugging
       setStatus(`Connessione chiusa (${ev.code})`, 'err');
       stopRecording();
     }
@@ -519,7 +488,6 @@ async function startRecording() {
 function startAudio() {
   audioCtx = new AudioContext({ sampleRate: 16000 });
   micSource = audioCtx.createMediaStreamSource(micStream);
-  // ScriptProcessor is deprecated but still universally supported for raw PCM
   processor = audioCtx.createScriptProcessor(4096, 1, 1);
   processor.onaudioprocess = (e) => {
     if (!recording || socket?.readyState !== WebSocket.OPEN) return;
@@ -539,18 +507,15 @@ function stopRecording() {
   recording = false;
   clearInterval(timerInterval);
   document.getElementById('timer').textContent = '';
-
   try { micSource?.disconnect(); } catch {}
   try { processor?.disconnect(); } catch {}
   try { audioCtx?.close(); } catch {}
   try { micStream?.getTracks().forEach(t => t.stop()); } catch {}
   try { if (socket?.readyState === WebSocket.OPEN) socket.close(); } catch {}
-
   setStatus('Registrazione terminata');
   setBtnStart();
 }
 
-// ── Timer ──────────────────────────────────────────────────────────
 function startTimer() {
   timerInterval = setInterval(() => {
     const s = Math.floor((Date.now() - recStart) / 1000);
@@ -560,10 +525,8 @@ function startTimer() {
   }, 500);
 }
 
-// ── Transcript data ────────────────────────────────────────────────
 function pushTurn(speaker, text, startSec) {
   const last = turns[turns.length - 1];
-  // Merge consecutive turns from the same speaker
   if (last && last.speaker === speaker) {
     last.text += ' ' + text;
   } else {
@@ -574,50 +537,37 @@ function pushTurn(speaker, text, startSec) {
 function renderAll() {
   const box = document.getElementById('box');
   const empty = document.getElementById('empty');
-
   if (turns.length === 0 && !interimText) {
     empty.style.display = 'flex';
     box.innerHTML = '';
     box.appendChild(empty);
     return;
   }
-
   empty.style.display = 'none';
-
-  // Re-render from scratch (fast enough for reasonable call lengths)
   box.innerHTML = '';
   turns.forEach(t => box.appendChild(makeTurnEl(t.speaker, t.text, t.startSec, false)));
-  if (interimText) {
-    box.appendChild(makeTurnEl(interimSpeaker, interimText + '...', null, true));
-  }
+  if (interimText) box.appendChild(makeTurnEl(interimSpeaker, interimText + '...', null, true));
   box.scrollTop = box.scrollHeight;
 }
 
 function makeTurnEl(speaker, text, startSec, isInterim) {
-  const spClass = `sp-${Math.min(speaker, 3)}`;
   const div = document.createElement('div');
-  div.className = `turn ${spClass}`;
-
+  div.className = `turn sp-${Math.min(speaker, 3)}`;
   const header = document.createElement('div');
   header.className = 'turn-header';
-
   const badge = document.createElement('span');
   badge.className = 'turn-badge';
   badge.textContent = getName(speaker);
-
   header.appendChild(badge);
-
   if (startSec !== null) {
     const t = document.createElement('span');
     t.className = 'turn-time';
     t.textContent = fmtTime(startSec);
     header.appendChild(t);
   }
-
   const body = document.createElement('div');
   body.className = 'turn-text' + (isInterim ? ' interim' : '');
   body.textContent = text;
-
   div.appendChild(header);
   div.appendChild(body);
   return div;
@@ -629,7 +579,6 @@ function fmtTime(sec) {
   return `${m}:${s}`;
 }
 
-// ── Export / copy ──────────────────────────────────────────────────
 function getPlainText() {
   return turns.map(t => `[${fmtTime(t.startSec)}] ${getName(t.speaker)}: ${t.text}`).join('\n\n');
 }
@@ -656,7 +605,6 @@ function clearAll() {
   renderAll();
 }
 
-// ── UI helpers ─────────────────────────────────────────────────────
 function setStatus(msg, state) {
   document.getElementById('statusText').textContent = msg;
   const dot = document.getElementById('statusDot');
@@ -664,14 +612,12 @@ function setStatus(msg, state) {
 }
 
 function setBtnStop() {
-  const btn = document.getElementById('mainBtn');
-  btn.className = 'btn btn-stop';
+  document.getElementById('mainBtn').className = 'btn btn-stop';
   document.getElementById('mainBtnLabel').textContent = 'Stop';
 }
 
 function setBtnStart() {
-  const btn = document.getElementById('mainBtn');
-  btn.className = 'btn btn-primary';
+  document.getElementById('mainBtn').className = 'btn btn-primary';
   document.getElementById('mainBtnLabel').textContent = 'Inizia';
 }
 
@@ -683,7 +629,6 @@ function toast(msg) {
   el._t = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
-// ── Init ───────────────────────────────────────────────────────────
 loadPrefs();
 </script>
 </body>
