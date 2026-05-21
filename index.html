@@ -455,6 +455,12 @@ async function startRecording() {
     return;
   }
 
+  // Create AudioContext first to detect the actual native sample rate (iOS Safari
+  // ignores sampleRate:16000 and uses 44100/48000 — we must tell Deepgram the real rate)
+  audioCtx = new AudioContext();
+  await audioCtx.resume();
+  const nativeSampleRate = audioCtx.sampleRate;
+
   const lang = document.getElementById('langSelect').value;
   const params = new URLSearchParams({
     model: 'nova-2',
@@ -465,18 +471,17 @@ async function startRecording() {
     interim_results: 'true',
     utterance_end_ms: '1200',
     encoding: 'linear16',
-    sample_rate: '16000',
+    sample_rate: String(Math.round(nativeSampleRate)),
     channels: '1',
   });
 
-  // Deepgram accepts token as sub-protocol for browser WebSocket auth
   socket = new WebSocket(`wss://api.deepgram.com/v1/listen?${params}`, ['token', apiKey]);
   socket.binaryType = 'arraybuffer';
 
   socket.onopen = () => {
     recording = true;
     recStart = Date.now();
-    setStatus('Connesso — registrazione in corso...', 'live');
+    setStatus(`Connesso — registrazione in corso... (${Math.round(nativeSampleRate / 1000)}kHz)`, 'live');
     setBtnStop();
     startTimer();
     startAudio();
@@ -517,9 +522,8 @@ async function startRecording() {
 }
 
 function startAudio() {
-  audioCtx = new AudioContext({ sampleRate: 16000 });
+  // audioCtx already created in startRecording() with native sample rate
   micSource = audioCtx.createMediaStreamSource(micStream);
-  // ScriptProcessor is deprecated but still universally supported for raw PCM
   processor = audioCtx.createScriptProcessor(4096, 1, 1);
   processor.onaudioprocess = (e) => {
     if (!recording || socket?.readyState !== WebSocket.OPEN) return;
