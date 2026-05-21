@@ -527,6 +527,8 @@ function startAudio() {
   processor = audioCtx.createScriptProcessor(4096, 1, 1);
   processor.onaudioprocess = (e) => {
     if (!recording || socket?.readyState !== WebSocket.OPEN) return;
+    // Resume if iOS Safari suspended the context mid-recording
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     const f32 = e.inputBuffer.getChannelData(0);
     const i16 = new Int16Array(f32.length);
     for (let i = 0; i < f32.length; i++) {
@@ -537,13 +539,29 @@ function startAudio() {
   };
   micSource.connect(processor);
   processor.connect(audioCtx.destination);
+
+  // iOS Safari suspends AudioContext on page blur / lack of interaction.
+  // Poll every 750ms and force-resume so audio never stops flowing.
+  window._keepAlive = setInterval(() => {
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }, 750);
 }
+
+// Any touch also re-wakes the AudioContext (iOS requirement)
+document.addEventListener('touchstart', () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}, { passive: true });
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+});
 
 function stopRecording() {
   recording = false;
   clearInterval(timerInterval);
   document.getElementById('timer').textContent = '';
 
+  clearInterval(window._keepAlive);
   try { micSource?.disconnect(); } catch {}
   try { processor?.disconnect(); } catch {}
   try { audioCtx?.close(); } catch {}
