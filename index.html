@@ -275,8 +275,24 @@
   }
 
   .turn-text.interim {
-    color: var(--muted);
-    font-style: italic;
+    color: var(--text);
+    font-style: normal;
+    opacity: 0.6;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--accent);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
   }
 
   .sp-0 .turn-badge { background: rgba(96,165,250,.15); color: var(--s0); }
@@ -431,21 +447,20 @@ async function startRecording() {
     return;
   }
 
-  // Create AudioContext BEFORE WebSocket so we know the real native sample rate.
-  // iOS Safari ignores sampleRate:16000 — sending wrong rate to Deepgram = garbled audio.
   audioCtx = new AudioContext();
   await audioCtx.resume();
   const nativeSampleRate = audioCtx.sampleRate;
 
   const lang = document.getElementById('langSelect').value;
   const params = new URLSearchParams({
-    model: 'nova-2',
+    model: 'nova-3',
     language: lang,
     diarize: 'true',
     punctuate: 'true',
     smart_format: 'true',
     interim_results: 'true',
-    utterance_end_ms: '1200',
+    no_delay: 'true',
+    utterance_end_ms: '1000',
     encoding: 'linear16',
     sample_rate: String(Math.round(nativeSampleRate)),
     channels: '1',
@@ -496,7 +511,6 @@ function startAudio() {
   processor = audioCtx.createScriptProcessor(4096, 1, 1);
   processor.onaudioprocess = (e) => {
     if (!recording || socket?.readyState !== WebSocket.OPEN) return;
-    // Revive AudioContext if iOS suspended it mid-recording
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const f32 = e.inputBuffer.getChannelData(0);
     const i16 = new Int16Array(f32.length);
@@ -509,13 +523,11 @@ function startAudio() {
   micSource.connect(processor);
   processor.connect(audioCtx.destination);
 
-  // iOS Safari suspends AudioContext on blur / inactivity — poll and force-resume
   window._keepAlive = setInterval(() => {
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   }, 750);
 }
 
-// Re-wake AudioContext on any touch or page focus (iOS requirement)
 document.addEventListener('touchstart', () => {
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 }, { passive: true });
@@ -568,7 +580,7 @@ function renderAll() {
   empty.style.display = 'none';
   box.innerHTML = '';
   turns.forEach(t => box.appendChild(makeTurnEl(t.speaker, t.text, t.startSec, false)));
-  if (interimText) box.appendChild(makeTurnEl(interimSpeaker, interimText + '...', null, true));
+  if (interimText) box.appendChild(makeTurnEl(interimSpeaker, interimText, null, true));
   box.scrollTop = box.scrollHeight;
 }
 
@@ -590,6 +602,11 @@ function makeTurnEl(speaker, text, startSec, isInterim) {
   const body = document.createElement('div');
   body.className = 'turn-text' + (isInterim ? ' interim' : '');
   body.textContent = text;
+  if (isInterim) {
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    body.appendChild(cursor);
+  }
   div.appendChild(header);
   div.appendChild(body);
   return div;
