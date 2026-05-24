@@ -26,274 +26,131 @@
     background: var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    min-height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   header {
-    padding: 16px 24px;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 10px;
     flex-wrap: wrap;
+    flex-shrink: 0;
   }
 
-  .logo { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .logo { font-size: 16px; font-weight: 700; }
   .logo span { color: var(--accent); }
 
-  .header-controls {
+  .header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
   .api-key-wrap {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 0 10px;
   }
-
-  .api-key-wrap label {
-    font-size: 11px;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
+  .api-key-wrap label { font-size: 11px; color: var(--muted); white-space: nowrap; }
   .api-key-input {
-    background: transparent;
-    border: none;
-    padding: 9px 4px;
-    color: var(--text);
-    font-size: 13px;
-    width: 230px;
-    outline: none;
+    background: transparent; border: none;
+    padding: 8px 4px; color: var(--text);
+    font-size: 13px; width: 180px; outline: none;
   }
 
   select.lang-select {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 10px;
-    color: var(--text);
-    font-size: 13px;
-    outline: none;
-    cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 8px;
+    color: var(--text); font-size: 13px; outline: none;
   }
 
   .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 9px 18px;
-    border-radius: 8px;
-    border: none;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s, background 0.15s;
-    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px; border: none;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: opacity 0.15s; white-space: nowrap;
   }
-  .btn:hover { opacity: 0.88; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
+  .btn:hover { opacity: 0.85; }
   .btn-primary { background: var(--accent); color: #fff; }
-  .btn-stop { background: var(--red); color: #fff; animation: pulse-btn 1.4s infinite; }
-  .btn-ghost {
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-    font-size: 12px;
-    padding: 6px 12px;
-  }
+  .btn-stop    { background: var(--red); color: #fff; animation: pulse-btn 1.4s infinite; }
+  .btn-ghost   { background: var(--surface); color: var(--text); border: 1px solid var(--border); font-size: 12px; padding: 6px 11px; }
 
   @keyframes pulse-btn {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
-    50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
+    50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
   }
-
-  .rec-dot {
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    background: currentColor;
-    flex-shrink: 0;
-  }
+  .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
   .status-bar {
-    padding: 7px 24px;
-    font-size: 12px;
-    color: var(--muted);
+    padding: 5px 16px;
+    font-size: 11px; color: var(--muted);
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .status-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--muted);
+    display: flex; align-items: center; gap: 7px;
     flex-shrink: 0;
   }
-  .status-dot.live { background: var(--green); animation: pulse-dot 1s infinite; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .status-dot.live { background: var(--green); animation: blink-dot 1s infinite; }
   .status-dot.err  { background: var(--red); }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
+  @keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
 
   .names-bar {
-    padding: 10px 24px;
+    padding: 7px 16px;
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-    font-size: 12px;
+    display: flex; align-items: center; gap: 16px;
+    flex-wrap: wrap; font-size: 11px; flex-shrink: 0;
   }
-
   .names-bar-label { color: var(--muted); }
-
-  .name-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .name-color {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
+  .name-item { display: flex; align-items: center; gap: 5px; }
+  .name-color { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
   .name-input {
-    background: transparent;
-    border: none;
+    background: transparent; border: none;
     border-bottom: 1px dashed var(--border);
-    color: var(--text);
-    font-size: 12px;
-    padding: 1px 4px;
-    width: 90px;
-    outline: none;
-    transition: border-color 0.2s;
+    color: var(--text); font-size: 11px;
+    padding: 1px 3px; width: 80px; outline: none;
   }
   .name-input:focus { border-color: var(--accent); }
 
-  main {
+  .toolbar {
+    padding: 7px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .toolbar-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .toolbar-actions { display: flex; gap: 6px; }
+
+  .transcript-scroll {
     flex: 1;
-    padding: 20px 24px;
-    max-width: 920px;
-    width: 100%;
-    margin: 0 auto;
+    overflow-y: auto;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 14px;
   }
 
-  .transcript-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .transcript-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-  }
-
-  .toolbar-actions { display: flex; gap: 8px; }
-
-  .transcript-box {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 22px;
-    min-height: 420px;
-    max-height: calc(100vh - 300px);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    scroll-behavior: smooth;
-  }
-
   .empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.6;
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; color: var(--muted); text-align: center; line-height: 1.6;
   }
+  .empty-icon { font-size: 40px; opacity: 0.2; }
 
-  .empty-icon { font-size: 44px; opacity: 0.25; }
-
-  .turn { display: flex; flex-direction: column; gap: 5px; }
-
-  .turn-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .turn-badge {
-    padding: 2px 9px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-  }
-
-  .turn-time {
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .turn-text {
-    font-size: 16px;
-    line-height: 1.65;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border-left: 3px solid;
-    background: rgba(255,255,255,0.02);
-  }
-
-  .turn-text.interim {
-    color: var(--text);
-    font-style: normal;
-    opacity: 0.6;
-  }
-
-  .cursor {
-    display: inline-block;
-    width: 2px;
-    height: 1em;
-    background: var(--accent);
-    margin-left: 2px;
-    vertical-align: text-bottom;
-    animation: blink 1s step-end infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
+  .turn { display: flex; flex-direction: column; gap: 4px; }
+  .turn-header { display: flex; align-items: center; gap: 7px; }
+  .turn-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .turn-time  { font-size: 11px; color: var(--muted); }
+  .turn-text  { font-size: 15px; line-height: 1.6; padding: 9px 12px; border-radius: 8px; border-left: 3px solid; }
 
   .sp-0 .turn-badge { background: rgba(96,165,250,.15); color: var(--s0); }
   .sp-0 .turn-text  { border-color: var(--s0); }
@@ -304,43 +161,93 @@
   .sp-3 .turn-badge { background: rgba(244,114,182,.15); color: var(--s3); }
   .sp-3 .turn-text  { border-color: var(--s3); }
 
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: #27272f;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-size: 13px;
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.25s;
-    pointer-events: none;
-    z-index: 999;
+  .live-bar {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    min-height: 60px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(99,102,241,.04);
   }
-  .toast.show { opacity: 1; transform: translateY(0); }
 
-  .transcript-box::-webkit-scrollbar { width: 5px; }
-  .transcript-box::-webkit-scrollbar-track { background: transparent; }
-  .transcript-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .live-indicator {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding-top: 2px; flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .live-indicator.visible { opacity: 1; }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: pulse-btn 1s infinite; }
+
+  .live-text {
+    flex: 1;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text);
+    min-height: 24px;
+  }
+
+  .live-speaker {
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .live-words { word-break: break-word; }
+
+  .live-word {
+    display: inline;
+    animation: word-in 0.12s ease-out;
+  }
+  @keyframes word-in {
+    from { opacity: 0; transform: translateY(3px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .live-cursor {
+    display: inline-block;
+    width: 2px; height: 1em;
+    background: var(--accent);
+    margin-left: 1px;
+    vertical-align: text-bottom;
+    animation: blink-cur 0.9s step-end infinite;
+  }
+  @keyframes blink-cur { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .live-placeholder { color: var(--muted); font-size: 13px; }
+
+  .toast {
+    position: fixed; bottom: 80px; right: 16px;
+    background: #27272f; border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 16px; font-size: 13px;
+    opacity: 0; transform: translateY(6px);
+    transition: all 0.2s; pointer-events: none; z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: none; }
+
+  .transcript-scroll::-webkit-scrollbar { width: 4px; }
+  .transcript-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">Cold Call <span>Transcriber</span></div>
-  <div class="header-controls">
+  <div class="header-right">
     <div class="api-key-wrap">
-      <label for="apiKey">Deepgram Key</label>
-      <input type="password" id="apiKey" class="api-key-input" placeholder="dg_..." autocomplete="off" />
+      <label for="apiKey">Key</label>
+      <input type="password" id="apiKey" class="api-key-input" placeholder="dg_..." autocomplete="off"/>
     </div>
     <select class="lang-select" id="langSelect">
-      <option value="it">🇮🇹 Italiano</option>
-      <option value="en">🇬🇧 English</option>
-      <option value="es">🇪🇸 Español</option>
-      <option value="fr">🇫🇷 Français</option>
-      <option value="de">🇩🇪 Deutsch</option>
+      <option value="it">🇮🇹 IT</option>
+      <option value="en">🇬🇧 EN</option>
+      <option value="es">🇪🇸 ES</option>
+      <option value="fr">🇫🇷 FR</option>
+      <option value="de">🇩🇪 DE</option>
     </select>
     <button class="btn btn-primary" id="mainBtn" onclick="toggleRecording()">
       <div class="rec-dot"></div>
@@ -351,164 +258,147 @@
 
 <div class="status-bar">
   <div class="status-dot" id="statusDot"></div>
-  <span id="statusText">Pronto — inserisci la API key Deepgram e premi Inizia</span>
-  <span id="timer" style="margin-left:auto; font-variant-numeric: tabular-nums;"></span>
+  <span id="statusText">Inserisci API key e premi Inizia</span>
+  <span id="timer" style="margin-left:auto;font-variant-numeric:tabular-nums"></span>
 </div>
 
 <div class="names-bar">
-  <span class="names-bar-label">Rinomina:</span>
+  <span class="names-bar-label">Nomi:</span>
   <div class="name-item">
     <div class="name-color" style="background:var(--s0)"></div>
-    <input class="name-input" id="name0" placeholder="Speaker 1" oninput="saveNames(); renderAll()" />
+    <input class="name-input" id="name0" placeholder="Speaker 1" oninput="saveNames();redrawAll()"/>
   </div>
   <div class="name-item">
     <div class="name-color" style="background:var(--s1)"></div>
-    <input class="name-input" id="name1" placeholder="Speaker 2" oninput="saveNames(); renderAll()" />
+    <input class="name-input" id="name1" placeholder="Speaker 2" oninput="saveNames();redrawAll()"/>
   </div>
   <div class="name-item">
     <div class="name-color" style="background:var(--s2)"></div>
-    <input class="name-input" id="name2" placeholder="Speaker 3" oninput="saveNames(); renderAll()" />
+    <input class="name-input" id="name2" placeholder="Speaker 3" oninput="saveNames();redrawAll()"/>
   </div>
   <div class="name-item">
     <div class="name-color" style="background:var(--s3)"></div>
-    <input class="name-input" id="name3" placeholder="Speaker 4" oninput="saveNames(); renderAll()" />
+    <input class="name-input" id="name3" placeholder="Speaker 4" oninput="saveNames();redrawAll()"/>
   </div>
 </div>
 
-<main>
-  <div class="transcript-toolbar">
-    <div class="transcript-label">Trascrizione in tempo reale</div>
-    <div class="toolbar-actions">
-      <button class="btn btn-ghost" onclick="copyTranscript()">Copia testo</button>
-      <button class="btn btn-ghost" onclick="exportTxt()">Esporta .txt</button>
-      <button class="btn btn-ghost" onclick="clearAll()">Pulisci</button>
-    </div>
+<div class="toolbar">
+  <span class="toolbar-label">Trascrizione</span>
+  <div class="toolbar-actions">
+    <button class="btn btn-ghost" onclick="copyAll()">Copia</button>
+    <button class="btn btn-ghost" onclick="exportTxt()">Esporta</button>
+    <button class="btn btn-ghost" onclick="clearAll()">Pulisci</button>
   </div>
+</div>
 
-  <div class="transcript-box" id="box">
-    <div class="empty-state" id="empty">
-      <div class="empty-icon">🎙️</div>
-      <div>Nessuna trascrizione.<br>Premi <strong>Inizia</strong>, metti il telefono in vivavoce<br>e parla — trascriverà ogni parola in tempo reale.</div>
-    </div>
+<div class="transcript-scroll" id="scroll">
+  <div class="empty-state" id="empty">
+    <div class="empty-icon">🎙️</div>
+    <div>Premi <strong>Inizia</strong>, poi metti il telefono<br>in vivavoce vicino al microfono</div>
   </div>
-</main>
+</div>
+
+<div class="live-bar">
+  <div class="live-indicator" id="liveInd">
+    <div class="live-dot"></div>LIVE
+  </div>
+  <div class="live-text" id="liveText">
+    <div class="live-placeholder" id="livePlaceholder">In attesa...</div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-let socket = null;
-let audioCtx = null;
-let processor = null;
-let micSource = null;
-let micStream = null;
-let recording = false;
-let recStart = null;
-let timerInterval = null;
+let socket = null, audioCtx = null, processor = null;
+let micSource = null, micStream = null;
+let recording = false, recStart = null, timerInterval = null;
 let turns = [];
-let interimSpeaker = 0;
-let interimText = '';
+let liveSpeaker = 0;
+let lastInterimText = '';
 
 function loadPrefs() {
-  const key = localStorage.getItem('dg_key');
-  if (key) document.getElementById('apiKey').value = key;
-  const lang = localStorage.getItem('dg_lang');
-  if (lang) document.getElementById('langSelect').value = lang;
+  const k = localStorage.getItem('dg_key');   if (k) document.getElementById('apiKey').value = k;
+  const l = localStorage.getItem('dg_lang');  if (l) document.getElementById('langSelect').value = l;
   for (let i = 0; i < 4; i++) {
     const n = localStorage.getItem(`sp_name_${i}`);
     if (n) document.getElementById(`name${i}`).value = n;
   }
 }
-
 function saveNames() {
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 4; i++)
     localStorage.setItem(`sp_name_${i}`, document.getElementById(`name${i}`).value);
-  }
+}
+function getName(i) {
+  return document.getElementById(`name${Math.min(i,3)}`)?.value.trim() || `Speaker ${i+1}`;
 }
 
-function getName(idx) {
-  const v = document.getElementById(`name${Math.min(idx, 3)}`)?.value.trim();
-  return v || `Speaker ${idx + 1}`;
-}
-
-function toggleRecording() {
-  recording ? stopRecording() : startRecording();
-}
+function toggleRecording() { recording ? stopRecording() : startRecording(); }
 
 async function startRecording() {
   const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) { toast('Inserisci prima la Deepgram API Key!'); return; }
+  if (!apiKey) { toast('Inserisci la Deepgram API Key!'); return; }
   localStorage.setItem('dg_key', apiKey);
   localStorage.setItem('dg_lang', document.getElementById('langSelect').value);
 
   try {
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-  } catch (e) {
-    setStatus('Microfono non disponibile: ' + e.message, 'err');
-    return;
-  }
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      video: false
+    });
+  } catch (e) { setStatus('Microfono non disponibile: ' + e.message, 'err'); return; }
 
   audioCtx = new AudioContext();
   await audioCtx.resume();
-  const nativeSampleRate = audioCtx.sampleRate;
+  const sr = audioCtx.sampleRate;
 
   const lang = document.getElementById('langSelect').value;
   const params = new URLSearchParams({
-    model: 'nova-3',
-    language: lang,
-    diarize: 'true',
-    punctuate: 'true',
-    smart_format: 'true',
-    interim_results: 'true',
-    no_delay: 'true',
-    utterance_end_ms: '1000',
-    encoding: 'linear16',
-    sample_rate: String(Math.round(nativeSampleRate)),
-    channels: '1',
+    model: 'nova-3', language: lang,
+    diarize: 'true', punctuate: 'true', smart_format: 'true',
+    interim_results: 'true', no_delay: 'true',
+    utterance_end_ms: '800',
+    encoding: 'linear16', sample_rate: String(Math.round(sr)), channels: '1',
   });
 
   socket = new WebSocket(`wss://api.deepgram.com/v1/listen?${params}`, ['token', apiKey]);
   socket.binaryType = 'arraybuffer';
 
   socket.onopen = () => {
-    recording = true;
-    recStart = Date.now();
-    setStatus(`Connesso — registrazione in corso... (${Math.round(nativeSampleRate / 1000)}kHz)`, 'live');
-    setBtnStop();
-    startTimer();
-    startAudio();
+    recording = true; recStart = Date.now();
+    setStatus(`Connesso — ${Math.round(sr/1000)}kHz, eco cancellato`, 'live');
+    setBtnStop(); startTimer(); startAudio();
+    document.getElementById('liveInd').classList.add('visible');
+    document.getElementById('livePlaceholder').textContent = 'Parla...';
   };
 
   socket.onmessage = (ev) => {
-    let data;
-    try { data = JSON.parse(ev.data); } catch { return; }
-    if (data.type !== 'Results') return;
-    const alt = data.channel?.alternatives?.[0];
-    if (!alt || !alt.transcript) return;
+    let d; try { d = JSON.parse(ev.data); } catch { return; }
+    if (d.type !== 'Results') return;
+    const alt = d.channel?.alternatives?.[0];
+    if (!alt) return;
+    const transcript = alt.transcript?.trim();
+    if (!transcript) return;
     const words = alt.words || [];
-    const spk = words.length > 0 ? (words[0].speaker ?? 0) : 0;
-    if (data.is_final) {
-      if (alt.transcript.trim()) pushTurn(spk, alt.transcript.trim(), data.start ?? 0);
-      interimText = '';
-      renderAll();
+    const spk   = words.length > 0 ? (words[0].speaker ?? 0) : liveSpeaker;
+    if (d.is_final) {
+      pushTurn(spk, transcript, d.start ?? 0);
+      clearLive();
+      redrawAll();
     } else {
-      interimSpeaker = spk;
-      interimText = alt.transcript.trim();
-      renderAll();
+      showLive(spk, transcript);
     }
   };
 
-  socket.onerror = () => setStatus('Errore connessione Deepgram', 'err');
+  socket.onerror = () => setStatus('Errore connessione', 'err');
   socket.onclose = (ev) => {
-    if (recording) {
-      setStatus(`Connessione chiusa (${ev.code})`, 'err');
-      stopRecording();
-    }
+    if (recording) { setStatus(`Chiuso (${ev.code})`, 'err'); stopRecording(); }
   };
 }
 
 function startAudio() {
   micSource = audioCtx.createMediaStreamSource(micStream);
-  processor = audioCtx.createScriptProcessor(4096, 1, 1);
+  processor  = audioCtx.createScriptProcessor(4096, 1, 1);
   processor.onaudioprocess = (e) => {
     if (!recording || socket?.readyState !== WebSocket.OPEN) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -522,41 +412,70 @@ function startAudio() {
   };
   micSource.connect(processor);
   processor.connect(audioCtx.destination);
-
   window._keepAlive = setInterval(() => {
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx?.state === 'suspended') audioCtx.resume();
   }, 750);
 }
 
 document.addEventListener('touchstart', () => {
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx?.state === 'suspended') audioCtx.resume();
 }, { passive: true });
-
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  if (!document.hidden && audioCtx?.state === 'suspended') audioCtx.resume();
 });
 
 function stopRecording() {
   recording = false;
-  clearInterval(timerInterval);
-  clearInterval(window._keepAlive);
+  clearInterval(timerInterval); clearInterval(window._keepAlive);
   document.getElementById('timer').textContent = '';
-  try { micSource?.disconnect(); } catch {}
-  try { processor?.disconnect(); } catch {}
-  try { audioCtx?.close(); } catch {}
+  document.getElementById('liveInd').classList.remove('visible');
+  try { micSource?.disconnect(); }  catch {}
+  try { processor?.disconnect(); }  catch {}
+  try { audioCtx?.close(); }        catch {}
   try { micStream?.getTracks().forEach(t => t.stop()); } catch {}
   try { if (socket?.readyState === WebSocket.OPEN) socket.close(); } catch {}
+  clearLive();
   setStatus('Registrazione terminata');
   setBtnStart();
 }
 
-function startTimer() {
-  timerInterval = setInterval(() => {
-    const s = Math.floor((Date.now() - recStart) / 1000);
-    const mm = String(Math.floor(s / 60)).padStart(2, '0');
-    const ss = String(s % 60).padStart(2, '0');
-    document.getElementById('timer').textContent = `${mm}:${ss}`;
-  }, 500);
+function showLive(speaker, text) {
+  const liveDiv = document.getElementById('liveText');
+  const placeholder = document.getElementById('livePlaceholder');
+  if (placeholder) placeholder.style.display = 'none';
+  liveSpeaker = speaker;
+  const newWords = text.split(' ');
+  const oldWords = lastInterimText ? lastInterimText.split(' ') : [];
+  lastInterimText = text;
+  liveDiv.innerHTML = '';
+  const spLabel = document.createElement('div');
+  spLabel.className = 'live-speaker';
+  spLabel.style.color = `var(--s${Math.min(speaker,3)})`;
+  spLabel.textContent = getName(speaker);
+  liveDiv.appendChild(spLabel);
+  const wordsRow = document.createElement('div');
+  wordsRow.className = 'live-words';
+  newWords.forEach((word, i) => {
+    const span = document.createElement('span');
+    span.className = 'live-word';
+    if (i >= oldWords.length || oldWords[i] !== word) {
+      span.style.animation = 'word-in 0.12s ease-out';
+    } else {
+      span.style.animation = 'none';
+    }
+    span.textContent = (i > 0 ? ' ' : '') + word;
+    wordsRow.appendChild(span);
+  });
+  const cursor = document.createElement('span');
+  cursor.className = 'live-cursor';
+  wordsRow.appendChild(cursor);
+  liveDiv.appendChild(wordsRow);
+}
+
+function clearLive() {
+  lastInterimText = '';
+  const liveDiv = document.getElementById('liveText');
+  liveDiv.innerHTML = '<div class="live-placeholder" id="livePlaceholder">Parla...</div>';
 }
 
 function pushTurn(speaker, text, startSec) {
@@ -568,104 +487,89 @@ function pushTurn(speaker, text, startSec) {
   }
 }
 
-function renderAll() {
-  const box = document.getElementById('box');
-  const empty = document.getElementById('empty');
-  if (turns.length === 0 && !interimText) {
+function redrawAll() {
+  const scroll = document.getElementById('scroll');
+  const empty  = document.getElementById('empty');
+  if (!turns.length) {
+    if (!scroll.contains(empty)) scroll.appendChild(empty);
     empty.style.display = 'flex';
-    box.innerHTML = '';
-    box.appendChild(empty);
     return;
   }
   empty.style.display = 'none';
-  box.innerHTML = '';
-  turns.forEach(t => box.appendChild(makeTurnEl(t.speaker, t.text, t.startSec, false)));
-  if (interimText) box.appendChild(makeTurnEl(interimSpeaker, interimText, null, true));
-  box.scrollTop = box.scrollHeight;
+  scroll.innerHTML = '';
+  turns.forEach(t => scroll.appendChild(makeTurnEl(t)));
+  scroll.scrollTop = scroll.scrollHeight;
 }
 
-function makeTurnEl(speaker, text, startSec, isInterim) {
+function makeTurnEl(t) {
+  const si = Math.min(t.speaker, 3);
   const div = document.createElement('div');
-  div.className = `turn sp-${Math.min(speaker, 3)}`;
-  const header = document.createElement('div');
-  header.className = 'turn-header';
+  div.className = `turn sp-${si}`;
+  const hdr = document.createElement('div');
+  hdr.className = 'turn-header';
   const badge = document.createElement('span');
   badge.className = 'turn-badge';
-  badge.textContent = getName(speaker);
-  header.appendChild(badge);
-  if (startSec !== null) {
-    const t = document.createElement('span');
-    t.className = 'turn-time';
-    t.textContent = fmtTime(startSec);
-    header.appendChild(t);
-  }
+  badge.textContent = getName(t.speaker);
+  const time = document.createElement('span');
+  time.className = 'turn-time';
+  time.textContent = fmt(t.startSec);
+  hdr.appendChild(badge); hdr.appendChild(time);
   const body = document.createElement('div');
-  body.className = 'turn-text' + (isInterim ? ' interim' : '');
-  body.textContent = text;
-  if (isInterim) {
-    const cursor = document.createElement('span');
-    cursor.className = 'cursor';
-    body.appendChild(cursor);
-  }
-  div.appendChild(header);
-  div.appendChild(body);
+  body.className = 'turn-text';
+  body.textContent = t.text;
+  div.appendChild(hdr); div.appendChild(body);
   return div;
 }
 
-function fmtTime(sec) {
-  const m = String(Math.floor(sec / 60)).padStart(2, '0');
-  const s = String(Math.floor(sec % 60)).padStart(2, '0');
-  return `${m}:${s}`;
+function fmt(sec) {
+  return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(Math.floor(sec%60)).padStart(2,'0')}`;
 }
 
-function getPlainText() {
-  return turns.map(t => `[${fmtTime(t.startSec)}] ${getName(t.speaker)}: ${t.text}`).join('\n\n');
+function getPlain() {
+  return turns.map(t => `[${fmt(t.startSec)}] ${getName(t.speaker)}: ${t.text}`).join('\n\n');
 }
-
-function copyTranscript() {
-  if (!turns.length) { toast('Nessuna trascrizione da copiare'); return; }
-  navigator.clipboard.writeText(getPlainText()).then(() => toast('Copiato negli appunti!'));
+function copyAll() {
+  if (!turns.length) { toast('Nessun testo'); return; }
+  navigator.clipboard.writeText(getPlain()).then(() => toast('Copiato!'));
 }
-
 function exportTxt() {
-  if (!turns.length) { toast('Nessuna trascrizione da esportare'); return; }
-  const date = new Date().toISOString().slice(0, 16).replace('T', '_').replace(':', '-');
-  const blob = new Blob([getPlainText()], { type: 'text/plain;charset=utf-8' });
+  if (!turns.length) { toast('Nessun testo'); return; }
+  const d = new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `trascrizione_${date}.txt`;
+  a.href = URL.createObjectURL(new Blob([getPlain()], {type:'text/plain;charset=utf-8'}));
+  a.download = `trascrizione_${d}.txt`;
   a.click();
 }
-
 function clearAll() {
-  if (turns.length && !confirm('Eliminare la trascrizione corrente?')) return;
-  turns = [];
-  interimText = '';
-  renderAll();
+  if (turns.length && !confirm('Eliminare la trascrizione?')) return;
+  turns = []; redrawAll();
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    const s = Math.floor((Date.now() - recStart) / 1000);
+    document.getElementById('timer').textContent =
+      `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  }, 500);
 }
 
 function setStatus(msg, state) {
   document.getElementById('statusText').textContent = msg;
-  const dot = document.getElementById('statusDot');
-  dot.className = 'status-dot' + (state ? ` ${state}` : '');
+  document.getElementById('statusDot').className = 'status-dot' + (state ? ` ${state}` : '');
 }
-
 function setBtnStop() {
   document.getElementById('mainBtn').className = 'btn btn-stop';
   document.getElementById('mainBtnLabel').textContent = 'Stop';
 }
-
 function setBtnStart() {
   document.getElementById('mainBtn').className = 'btn btn-primary';
   document.getElementById('mainBtnLabel').textContent = 'Inizia';
 }
-
 function toast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
+  el.textContent = msg; el.classList.add('show');
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), 2800);
+  el._t = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
 loadPrefs();
