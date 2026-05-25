@@ -211,11 +211,28 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSys
       <div class="cta-icon upload">📁</div>
       <div class="cta-card-text">
         <strong>Carica audio / video</strong>
-        <span>MP3, MP4, WAV, M4A, MOV, WEBM e altri &middot; fino a 1 ora</span>
+        <span>MP3, MP4, WAV, M4A, MOV, WEBM e altri &middot; fino a 5 GB</span>
       </div>
       <span class="arrow">&#8250;</span>
     </div>
-    <p style="font-size:.78rem;color:var(--muted);text-align:center;padding-top:8px">
+    <!-- Dashboard stats -->
+    <div id="stats-card" class="hidden" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;display:flex;justify-content:space-around;text-align:center;box-shadow:var(--shadow)">
+      <div>
+        <div id="stat-count" style="font-size:1.4rem;font-weight:800;color:var(--primary)">0</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Trascrizioni</div>
+      </div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div>
+        <div id="stat-time" style="font-size:1.4rem;font-weight:800;color:var(--primary)">0:00</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Ore trascritte</div>
+      </div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div>
+        <div id="stat-cost" style="font-size:1.4rem;font-weight:800;color:var(--green)">$0.00</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Costo stimato</div>
+      </div>
+    </div>
+    <p style="font-size:.78rem;color:var(--muted);text-align:center;padding-top:4px">
       Le API key vengono salvate solo sul tuo dispositivo.
       <a href="#" onclick="openSettings();return false" style="color:var(--primary);font-weight:600">Configura &rarr;</a>
     </p>
@@ -280,7 +297,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSys
       <div class="drop-icon">📁</div>
       <strong>Trascina qui il tuo file</strong>
       <span>oppure tocca per selezionare</span>
-      <div style="margin-top:10px;font-size:.78rem;color:var(--muted)">MP3 &middot; MP4 &middot; WAV &middot; M4A &middot; MOV &middot; WEBM &middot; OGG &middot; FLAC &middot; AAC</div>
+      <div style="margin-top:10px;font-size:.78rem;color:var(--muted)">MP3 &middot; MP4 &middot; WAV &middot; M4A &middot; MOV &middot; WEBM &middot; OGG &middot; FLAC &middot; AAC &middot; fino a 5 GB</div>
     </div>
 
     <div id="file-info" class="file-info hidden">
@@ -533,6 +550,34 @@ function stopAndGoHome() {
 }
 
 // ══════════════════════════════════════════════
+//  STATS / DASHBOARD
+// ══════════════════════════════════════════════
+// AssemblyAI Universal-3 Pro pricing: ~$0.65/hr for supported langs
+var COST_PER_MIN = 0.0108;
+
+function recordStats(durationSec) {
+  var mins = durationSec / 60;
+  var prevCount = parseInt(localStorage.getItem('stat_count') || '0');
+  var prevMins = parseFloat(localStorage.getItem('stat_mins') || '0');
+  localStorage.setItem('stat_count', prevCount + 1);
+  localStorage.setItem('stat_mins', (prevMins + mins).toFixed(2));
+  renderStats();
+}
+
+function renderStats() {
+  var count = parseInt(localStorage.getItem('stat_count') || '0');
+  var totalMins = parseFloat(localStorage.getItem('stat_mins') || '0');
+  var cost = totalMins * COST_PER_MIN;
+  var h = Math.floor(totalMins / 60);
+  var m = Math.floor(totalMins % 60);
+  var card = document.getElementById('stats-card');
+  if (count > 0) card.classList.remove('hidden');
+  document.getElementById('stat-count').textContent = count;
+  document.getElementById('stat-time').textContent = h + ':' + String(m).padStart(2,'0');
+  document.getElementById('stat-cost').textContent = '$' + cost.toFixed(2);
+}
+
+// ══════════════════════════════════════════════
 //  UTILITIES
 // ══════════════════════════════════════════════
 function fmt(sec) {
@@ -576,39 +621,68 @@ function startLive() {
 
 function initAudioPipeline() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  audioCtx.resume().then(function() {
-    var sr = audioCtx.sampleRate;
-    var wsUrl = 'wss://api.assemblyai.com/v2/realtime/ws?sample_rate=' + Math.round(sr) + '&token=' + encodeURIComponent(aaiKey);
+  var sr;
 
-    socket = new WebSocket(wsUrl);
-    socket.binaryType = 'arraybuffer';
+  document.getElementById('live-interim').textContent = 'Connessione AssemblyAI...';
+  document.getElementById('live-interim').classList.remove('has-text');
 
-    socket.onopen = function() {
-      recording = true;
-      liveTurns = []; interimBuf = '';
-      var scroll = document.getElementById('live-scroll');
-      scroll.innerHTML = '';
-      document.getElementById('rec-badge').classList.remove('hidden');
-      document.getElementById('btn-start-live').classList.add('hidden');
-      document.getElementById('btn-stop-live').classList.remove('hidden');
-      document.getElementById('live-dot').style.opacity = '1';
-      document.getElementById('live-interim').textContent = 'In ascolto...';
-      document.getElementById('live-interim').classList.remove('has-text');
-      document.getElementById('live-title').textContent = 'Registrazione';
-      recStart = Date.now();
-      recTimerInterval = setInterval(updateRecTimer, 1000);
-      window._keepAlive = setInterval(function(){
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      }, 750);
-      setupScriptProcessor();
-    };
+  audioCtx.resume()
+    .then(function() {
+      sr = audioCtx.sampleRate;
+      return fetch('https://api.assemblyai.com/v2/realtime/token', {
+        method: 'POST',
+        headers: { 'Authorization': aaiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expires_in: 3600 })
+      });
+    })
+    .then(function(resp) {
+      if (!resp.ok) return resp.text().then(function(t){ throw new Error('Auth ' + resp.status + ': ' + t.slice(0,120)); });
+      return resp.json();
+    })
+    .then(function(tokenData) {
+      var wsUrl = 'wss://api.assemblyai.com/v2/realtime/ws'
+        + '?sample_rate=' + Math.round(sr)
+        + '&token=' + encodeURIComponent(tokenData.token)
+        + '&language_code=' + appLang;
 
-    socket.onmessage = onSocketMessage;
-    socket.onerror = function() { showToast('Errore connessione AssemblyAI'); };
-    socket.onclose = function(ev) {
-      if (recording && ev.code !== 1000 && ev.code !== 4000) showToast('Connessione persa: ' + ev.code);
-    };
-  });
+      socket = new WebSocket(wsUrl);
+      socket.binaryType = 'arraybuffer';
+
+      socket.onopen = function() {
+        recording = true;
+        liveTurns = []; interimBuf = '';
+        var scroll = document.getElementById('live-scroll');
+        scroll.innerHTML = '';
+        document.getElementById('rec-badge').classList.remove('hidden');
+        document.getElementById('btn-start-live').classList.add('hidden');
+        document.getElementById('btn-stop-live').classList.remove('hidden');
+        document.getElementById('live-dot').style.opacity = '1';
+        document.getElementById('live-interim').textContent = 'In ascolto...';
+        document.getElementById('live-interim').classList.remove('has-text');
+        document.getElementById('live-title').textContent = 'Registrazione';
+        recStart = Date.now();
+        recTimerInterval = setInterval(updateRecTimer, 1000);
+        window._keepAlive = setInterval(function(){
+          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }, 750);
+        setupScriptProcessor();
+      };
+
+      socket.onmessage = onSocketMessage;
+      socket.onerror = function() { showToast('Errore connessione AssemblyAI'); };
+      socket.onclose = function(ev) {
+        if (recording && ev.code !== 1000 && ev.code !== 4000) showToast('Connessione persa (cod. ' + ev.code + ')');
+      };
+    })
+    .catch(function(e) {
+      if (audioCtx) { audioCtx.close(); audioCtx = null; }
+      if (micStream) { micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
+      micStream = null;
+      showToast('Errore avvio: ' + e.message, 4000);
+      document.getElementById('btn-start-live').classList.remove('hidden');
+      document.getElementById('btn-stop-live').classList.add('hidden');
+      document.getElementById('live-interim').textContent = 'In attesa...';
+    });
 }
 
 function setupScriptProcessor() {
@@ -729,9 +803,11 @@ function stopLive() {
   document.getElementById('live-title').textContent = 'Pronto';
 
   if (liveTurns.length > 0) {
+    var liveDurSec = Math.floor((Date.now() - recStart) / 1000);
     autoDownload(liveTurns);
     resultTurns = JSON.parse(JSON.stringify(liveTurns));
     renderResult();
+    recordStats(liveDurSec);
     showToast('Trascrizione salvata — apertura risultato...', 2000);
     setTimeout(function(){ showScreen('screen-result'); }, 1500);
   } else {
@@ -865,7 +941,7 @@ function transcribeFile() {
     return fetch('https://api.assemblyai.com/v2/transcript', {
       method: 'POST',
       headers: { 'Authorization': aaiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ audio_url: upData.upload_url, speaker_labels: true, language_code: langCode, speech_model: 'best' }),
+      body: JSON.stringify({ audio_url: upData.upload_url, speaker_labels: true, language_code: langCode }),
       signal: signal
     });
   }).then(function(resp) {
@@ -885,8 +961,10 @@ function transcribeFile() {
       return;
     }
     resultTurns = groupWordsTurns(words);
+    var uploadDurSec = Math.floor((Date.now() - t0) / 1000);
     autoDownload(resultTurns);
     renderResult();
+    recordStats(uploadDurSec);
     showScreen('screen-result');
   }).catch(function(e) {
     clearInterval(elapsedInterval);
@@ -1185,6 +1263,7 @@ function closeAiOnOverlay(e) { if (e.target === document.getElementById('modal-a
 //  INIT
 // ══════════════════════════════════════════════
 loadPrefs();
+renderStats();
 </script>
 </body>
 </html>
