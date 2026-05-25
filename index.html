@@ -2,635 +2,1167 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cold Call Transcriber</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Transcriber — Trascrizione professionale</title>
 <style>
-  :root {
-    --bg: #0f0f13;
-    --surface: #1a1a24;
-    --border: #2a2a3a;
-    --text: #e8e8f0;
-    --muted: #6b6b8a;
-    --accent: #6366f1;
-    --s0: #60a5fa;
-    --s1: #fb923c;
-    --s2: #34d399;
-    --s3: #f472b6;
-    --red: #ef4444;
-    --green: #22c55e;
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4ff;
+  --surface:#ffffff;
+  --border:#e2e8f0;
+  --text:#1e293b;
+  --muted:#64748b;
+  --primary:#1d4ed8;
+  --primary-light:#3b82f6;
+  --primary-bg:#eff6ff;
+  --s0:#2563eb;
+  --s1:#16a34a;
+  --s2:#ea580c;
+  --s3:#7c3aed;
+  --red:#dc2626;
+  --green:#16a34a;
+  --warn:#d97706;
+  --warn-bg:#fffbeb;
+  --radius:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+}
+html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);font-size:16px;line-height:1.5;overflow:hidden}
+.screen{display:none;position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--bg)}
+.screen.active{display:flex;flex-direction:column}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Header ── */
+.app-header{display:flex;align-items:center;padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border);gap:12px;min-height:56px;flex-shrink:0;position:sticky;top:0;z-index:10}
+.app-header h1{font-size:1.1rem;font-weight:700;flex:1;color:var(--text)}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--primary);font-size:.9rem;font-weight:600;padding:4px 0;display:flex;align-items:center;gap:4px}
+.btn-icon{background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:var(--muted);transition:background .15s}
+.btn-icon:hover{background:var(--primary-bg);color:var(--primary)}
+.btn-icon svg{display:block}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:#1e40af}
+.btn-primary:active{transform:scale(.98)}
+.btn-secondary{background:var(--primary-bg);color:var(--primary);border:1.5px solid var(--primary-light)}
+.btn-secondary:hover{background:#dbeafe}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-ghost{background:none;color:var(--primary);border:1.5px solid var(--border)}
+.btn-ghost:hover{border-color:var(--primary-light);background:var(--primary-bg)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-full{width:100%}
+.btn-sm{padding:7px 14px;font-size:.85rem}
 
-  /* ── Header ── */
-  header {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
-    flex-shrink: 0;
-  }
+/* ── HOME ── */
+#screen-home{align-items:center;justify-content:flex-start;padding:0}
+.home-header{width:100%;display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
+.home-logo{display:flex;align-items:center;gap:10px}
+.home-logo span{font-size:1.5rem;font-weight:800;color:var(--primary);letter-spacing:-.5px}
+.home-body{width:100%;max-width:420px;padding:32px 20px 40px;display:flex;flex-direction:column;gap:16px;margin:0 auto}
+.home-tagline{font-size:1.4rem;font-weight:700;text-align:center;color:var(--text);line-height:1.3}
+.home-tagline small{display:block;font-size:.9rem;font-weight:400;color:var(--muted);margin-top:6px}
+.cta-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:22px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow);text-decoration:none;color:var(--text)}
+.cta-card:hover{border-color:var(--primary-light);box-shadow:0 4px 20px rgba(29,78,216,.12);transform:translateY(-1px)}
+.cta-card:active{transform:scale(.98)}
+.cta-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0}
+.cta-icon.live{background:#fee2e2}
+.cta-icon.upload{background:#dbeafe}
+.cta-card-text{flex:1}
+.cta-card-text strong{display:block;font-size:1.05rem;font-weight:700}
+.cta-card-text span{font-size:.85rem;color:var(--muted)}
+.cta-card .arrow{color:var(--muted);font-size:1.2rem}
 
-  .logo { font-size: 16px; font-weight: 700; }
-  .logo span { color: var(--accent); }
+/* ── LIVE SCREEN ── */
+#screen-live{flex-direction:column}
+.live-scroll{flex:1;overflow-y:auto;padding:16px 20px 0;display:flex;flex-direction:column;gap:12px}
+.turn{display:flex;flex-direction:column;gap:4px}
+.turn-meta{display:flex;align-items:center;gap:8px}
+.speaker-badge{padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;color:#fff}
+.turn-time{font-size:.75rem;color:var(--muted)}
+.turn-text{font-size:.95rem;line-height:1.6;padding-left:2px}
+.word-span{cursor:default}
+.word-span.low-conf{background:var(--warn-bg);color:var(--warn);border-radius:3px;padding:0 2px;cursor:pointer;border-bottom:2px solid var(--warn)}
+.word-span.low-conf:hover{background:#fef3c7}
+.word-span.corrected{color:var(--green);border-bottom:2px solid var(--green);cursor:pointer}
 
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+/* Live bar */
+.live-bar{background:var(--surface);border-top:1.5px solid var(--border);padding:12px 20px;display:flex;align-items:flex-start;gap:10px;min-height:56px;flex-shrink:0}
+.live-dot{width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:5px;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.live-text{flex:1;font-size:.9rem;color:var(--muted);font-style:italic;line-height:1.5;word-break:break-word}
+.live-text.has-text{color:var(--text);font-style:normal}
+.live-footer{padding:16px 20px 20px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:12px;flex-shrink:0}
 
-  .api-key-wrap {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0 10px;
-  }
-  .api-key-wrap label { font-size: 11px; color: var(--muted); white-space: nowrap; }
-  .api-key-input {
-    background: transparent; border: none;
-    padding: 8px 4px; color: var(--text);
-    font-size: 13px; width: 180px; outline: none;
-  }
+/* REC indicator */
+.rec-badge{display:flex;align-items:center;gap:6px;background:#fee2e2;color:var(--red);padding:4px 10px;border-radius:20px;font-size:.8rem;font-weight:700}
+.rec-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1s infinite}
 
-  select.lang-select {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; padding: 7px 8px;
-    color: var(--text); font-size: 13px; outline: none;
-  }
+/* ── UPLOAD SCREEN ── */
+#screen-upload{flex-direction:column}
+.upload-body{flex:1;padding:24px 20px;display:flex;flex-direction:column;gap:20px;max-width:480px;margin:0 auto;width:100%}
+.dropzone{border:2px dashed var(--primary-light);border-radius:14px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .15s;background:var(--primary-bg)}
+.dropzone.dragover{border-color:var(--primary);background:#dbeafe}
+.dropzone .drop-icon{font-size:2.5rem;margin-bottom:12px}
+.dropzone strong{display:block;font-size:1.05rem;color:var(--primary)}
+.dropzone span{font-size:.85rem;color:var(--muted)}
+.file-info{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.file-info-icon{font-size:1.6rem}
+.file-info-text{flex:1;min-width:0}
+.file-info-text strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.95rem}
+.file-info-text span{font-size:.8rem;color:var(--muted)}
+.progress-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+.spinner{width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress-label{font-size:.95rem;font-weight:600;color:var(--text)}
+.progress-sub{font-size:.82rem;color:var(--muted)}
+.elapsed{font-variant-numeric:tabular-nums;font-size:.82rem;color:var(--primary);font-weight:600}
 
-  /* ── Buttons ── */
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 16px; border-radius: 8px; border: none;
-    font-size: 14px; font-weight: 600; cursor: pointer;
-    transition: opacity 0.15s; white-space: nowrap;
-  }
-  .btn:hover { opacity: 0.85; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-stop    { background: var(--red); color: #fff; animation: pulse-btn 1.4s infinite; }
-  .btn-ghost   { background: var(--surface); color: var(--text); border: 1px solid var(--border); font-size: 12px; padding: 6px 11px; }
+/* ── RESULT SCREEN ── */
+#screen-result{flex-direction:column}
+.result-scroll{flex:1;overflow-y:auto;padding:16px 20px 32px;display:flex;flex-direction:column;gap:12px}
+.speaker-names{display:flex;flex-wrap:wrap;gap:8px;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.sp-name-wrap{display:flex;align-items:center;gap:6px}
+.sp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sp-name-input{border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.82rem;font-weight:600;width:100px;color:var(--text);background:var(--surface)}
+.sp-name-input:focus{outline:none;border-color:var(--primary-light)}
 
-  @keyframes pulse-btn {
-    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
-    50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
-  }
-  .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+/* Popover correzione */
+.word-popover{position:fixed;background:var(--surface);border:1.5px solid var(--primary-light);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;display:none;flex-direction:column;gap:8px;min-width:180px}
+.word-popover.open{display:flex}
+.word-popover input{border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.9rem;color:var(--text);width:100%}
+.word-popover input:focus{outline:none;border-color:var(--primary-light)}
+.popover-actions{display:flex;gap:6px}
+.popover-actions button{flex:1;padding:6px;border-radius:6px;border:none;cursor:pointer;font-size:.82rem;font-weight:600}
+.popover-confirm{background:var(--primary);color:#fff}
+.popover-cancel{background:var(--border);color:var(--text)}
 
-  /* ── Status ── */
-  .status-bar {
-    padding: 5px 16px;
-    font-size: 11px; color: var(--muted);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 7px;
-    flex-shrink: 0;
-  }
-  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
-  .status-dot.live { background: var(--green); animation: blink-dot 1s infinite; }
-  .status-dot.err  { background: var(--red); }
-  @keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
+/* AI Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:100;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:85vh;display:flex;flex-direction:column;padding:0;overflow:hidden}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0}
+.modal-header{padding:16px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.modal-header h2{flex:1;font-size:1.05rem;font-weight:700}
+.modal-body{flex:1;overflow-y:auto;padding:20px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px}
 
-  /* ── Names bar ── */
-  .names-bar {
-    padding: 7px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 16px;
-    flex-wrap: wrap; font-size: 11px; flex-shrink: 0;
-  }
-  .names-bar-label { color: var(--muted); }
-  .name-item { display: flex; align-items: center; gap: 5px; }
-  .name-color { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .name-input {
-    background: transparent; border: none;
-    border-bottom: 1px dashed var(--border);
-    color: var(--text); font-size: 11px;
-    padding: 1px 3px; width: 80px; outline: none;
-  }
-  .name-input:focus { border-color: var(--accent); }
+/* Settings Modal */
+#modal-settings .modal-body{display:flex;flex-direction:column;gap:18px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:.85rem;font-weight:600;color:var(--muted)}
+.field input,.field select{border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.9rem;color:var(--text);background:var(--surface);width:100%}
+.field input:focus,.field select:focus{outline:none;border-color:var(--primary-light)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.section-title{font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
 
-  /* ── Toolbar ── */
-  .toolbar {
-    padding: 7px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    flex-shrink: 0;
-  }
-  .toolbar-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
-  .toolbar-actions { display: flex; gap: 6px; }
+/* AI Review */
+.ai-text{font-size:.9rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
 
-  /* ── Transcript scroll area ── */
-  .transcript-scroll {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;color:#fff;padding:10px 20px;border-radius:30px;font-size:.85rem;font-weight:600;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  .empty-state {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 8px; color: var(--muted); text-align: center; line-height: 1.6;
-  }
-  .empty-icon { font-size: 40px; opacity: 0.2; }
+/* Empty state */
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);padding:40px 20px;text-align:center}
+.empty-state .e-icon{font-size:2.5rem;opacity:.4}
+.empty-state p{font-size:.9rem}
 
-  /* ── Confirmed turn ── */
-  .turn { display: flex; flex-direction: column; gap: 4px; }
-  .turn-header { display: flex; align-items: center; gap: 7px; }
-  .turn-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
-  .turn-time  { font-size: 11px; color: var(--muted); }
-  .turn-text  { font-size: 15px; line-height: 1.6; padding: 9px 12px; border-radius: 8px; border-left: 3px solid; }
+/* util */
+.hidden{display:none!important}
+.flex-gap{display:flex;gap:8px;align-items:center}
 
-  .sp-0 .turn-badge { background: rgba(96,165,250,.15); color: var(--s0); }
-  .sp-0 .turn-text  { border-color: var(--s0); }
-  .sp-1 .turn-badge { background: rgba(251,146,60,.15); color: var(--s1); }
-  .sp-1 .turn-text  { border-color: var(--s1); }
-  .sp-2 .turn-badge { background: rgba(52,211,153,.15); color: var(--s2); }
-  .sp-2 .turn-text  { border-color: var(--s2); }
-  .sp-3 .turn-badge { background: rgba(244,114,182,.15); color: var(--s3); }
-  .sp-3 .turn-text  { border-color: var(--s3); }
+/* Gear SVG shared path */
+.gear-path{stroke-linecap:round;stroke-linejoin:round}
 
-  /* ── LIVE bar — fixed at bottom ── */
-  .live-bar {
-    flex-shrink: 0;
-    border-top: 1px solid var(--border);
-    padding: 10px 16px;
-    min-height: 56px;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    background: rgba(99,102,241,.04);
-  }
-
-  .live-indicator {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 10px; font-weight: 700; color: var(--accent);
-    text-transform: uppercase; letter-spacing: 0.5px;
-    padding-top: 2px; flex-shrink: 0;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .live-indicator.visible { opacity: 1; }
-  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: pulse-btn 1s infinite; }
-
-  .live-text {
-    flex: 1;
-    font-size: 15px;
-    line-height: 1.6;
-    color: var(--text);
-    min-height: 24px;
-  }
-
-  .live-speaker {
-    font-size: 11px;
-    font-weight: 700;
-    margin-bottom: 2px;
-  }
-
-  .live-words { word-break: break-word; }
-
-  /* each word fades in */
-  .live-word {
-    display: inline;
-    animation: word-in 0.12s ease-out;
-  }
-  @keyframes word-in {
-    from { opacity: 0; transform: translateY(3px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .live-cursor {
-    display: inline-block;
-    width: 2px; height: 1em;
-    background: var(--accent);
-    margin-left: 1px;
-    vertical-align: text-bottom;
-    animation: blink-cur 0.9s step-end infinite;
-  }
-  @keyframes blink-cur { 0%,100%{opacity:1} 50%{opacity:0} }
-
-  .live-placeholder { color: var(--muted); font-size: 13px; }
-
-  /* ── Toast ── */
-  .toast {
-    position: fixed; bottom: 80px; right: 16px;
-    background: #27272f; border: 1px solid var(--border);
-    border-radius: 8px; padding: 9px 16px; font-size: 13px;
-    opacity: 0; transform: translateY(6px);
-    transition: all 0.2s; pointer-events: none; z-index: 99;
-  }
-  .toast.show { opacity: 1; transform: none; }
-
-  /* scrollbar */
-  .transcript-scroll::-webkit-scrollbar { width: 4px; }
-  .transcript-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+@media(min-width:600px){
+  .upload-body{padding:32px 24px}
+  .live-scroll,.result-scroll{padding:20px 24px 0}
+}
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<header>
-  <div class="logo">Cold Call <span>Transcriber</span></div>
-  <div class="header-right">
-    <div class="api-key-wrap">
-      <label for="apiKey">Key</label>
-      <input type="password" id="apiKey" class="api-key-input" placeholder="dg_..." autocomplete="off"/>
+<!-- ══════════ HOME ══════════ -->
+<div id="screen-home" class="screen active">
+  <div class="home-header">
+    <div class="home-logo">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect width="30" height="30" rx="8" fill="#1d4ed8"/><path d="M15 8v14M10 11v8M20 11v8M7 15h2M21 15h2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Transcriber</span>
     </div>
-    <select class="lang-select" id="langSelect">
-      <option value="it">🇮🇹 IT</option>
-      <option value="en">🇬🇧 EN</option>
-      <option value="es">🇪🇸 ES</option>
-      <option value="fr">🇫🇷 FR</option>
-      <option value="de">🇩🇪 DE</option>
-    </select>
-    <button class="btn btn-primary" id="mainBtn" onclick="toggleRecording()">
-      <div class="rec-dot"></div>
-      <span id="mainBtnLabel">Inizia</span>
+    <button class="btn-icon" onclick="openSettings()" title="Impostazioni" aria-label="Impostazioni">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
   </div>
-</header>
-
-<!-- Status -->
-<div class="status-bar">
-  <div class="status-dot" id="statusDot"></div>
-  <span id="statusText">Inserisci API key e premi Inizia</span>
-  <span id="timer" style="margin-left:auto;font-variant-numeric:tabular-nums"></span>
-</div>
-
-<!-- Speaker names -->
-<div class="names-bar">
-  <span class="names-bar-label">Nomi:</span>
-  <div class="name-item">
-    <div class="name-color" style="background:var(--s0)"></div>
-    <input class="name-input" id="name0" placeholder="Speaker 1" oninput="saveNames();redrawAll()"/>
-  </div>
-  <div class="name-item">
-    <div class="name-color" style="background:var(--s1)"></div>
-    <input class="name-input" id="name1" placeholder="Speaker 2" oninput="saveNames();redrawAll()"/>
-  </div>
-  <div class="name-item">
-    <div class="name-color" style="background:var(--s2)"></div>
-    <input class="name-input" id="name2" placeholder="Speaker 3" oninput="saveNames();redrawAll()"/>
-  </div>
-  <div class="name-item">
-    <div class="name-color" style="background:var(--s3)"></div>
-    <input class="name-input" id="name3" placeholder="Speaker 4" oninput="saveNames();redrawAll()"/>
-  </div>
-</div>
-
-<!-- Toolbar -->
-<div class="toolbar">
-  <span class="toolbar-label">Trascrizione</span>
-  <div class="toolbar-actions">
-    <button class="btn btn-ghost" onclick="copyAll()">Copia</button>
-    <button class="btn btn-ghost" onclick="exportTxt()">Esporta</button>
-    <button class="btn btn-ghost" onclick="clearAll()">Pulisci</button>
+  <div class="home-body">
+    <div class="home-tagline">
+      Trascrizione perfetta<br>di ogni conversazione
+      <small>Powered by Deepgram nova-3 &middot; Qualità professionale</small>
+    </div>
+    <div style="height:8px"></div>
+    <div class="cta-card" onclick="goLive()" role="button" tabindex="0">
+      <div class="cta-icon live">🎙</div>
+      <div class="cta-card-text">
+        <strong>Registra dal vivo</strong>
+        <span>Trascrizione in tempo reale, parola per parola</span>
+      </div>
+      <span class="arrow">&#8250;</span>
+    </div>
+    <div class="cta-card" onclick="goUpload()" role="button" tabindex="0">
+      <div class="cta-icon upload">📁</div>
+      <div class="cta-card-text">
+        <strong>Carica audio / video</strong>
+        <span>MP3, MP4, WAV, M4A, MOV, WEBM e altri &middot; fino a 1 ora</span>
+      </div>
+      <span class="arrow">&#8250;</span>
+    </div>
+    <p style="font-size:.78rem;color:var(--muted);text-align:center;padding-top:8px">
+      Le API key vengono salvate solo sul tuo dispositivo.
+      <a href="#" onclick="openSettings();return false" style="color:var(--primary);font-weight:600">Configura &rarr;</a>
+    </p>
   </div>
 </div>
 
-<!-- Scrollable transcript -->
-<div class="transcript-scroll" id="scroll">
-  <div class="empty-state" id="empty">
-    <div class="empty-icon">🎙️</div>
-    <div>Premi <strong>Inizia</strong>, poi metti il telefono<br>in vivavoce vicino al microfono</div>
+<!-- ══════════ LIVE ══════════ -->
+<div id="screen-live" class="screen">
+  <div class="app-header">
+    <button class="back-btn" onclick="stopAndGoHome()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Home
+    </button>
+    <h1 id="live-title">Pronto</h1>
+    <div class="flex-gap">
+      <div id="rec-badge" class="rec-badge hidden"><span class="dot"></span>REC <span id="rec-timer">00:00</span></div>
+      <button class="btn-icon" onclick="openSettings()" aria-label="Impostazioni">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="live-scroll" class="live-scroll">
+    <div id="live-empty" class="empty-state">
+      <div class="e-icon">🎙</div>
+      <p>Premi Avvia per iniziare la registrazione</p>
+    </div>
+  </div>
+
+  <div class="live-bar">
+    <div class="live-dot" id="live-dot" style="opacity:.3"></div>
+    <div class="live-text" id="live-interim">In attesa...</div>
+  </div>
+
+  <div class="live-footer">
+    <button id="btn-start-live" class="btn btn-primary btn-full" onclick="startLive()">
+      🎙 Avvia Registrazione
+    </button>
+    <button id="btn-stop-live" class="btn btn-danger btn-full hidden" onclick="stopLive()">
+      &#9632; Stop
+    </button>
   </div>
 </div>
 
-<!-- Live bar — always visible at bottom -->
-<div class="live-bar">
-  <div class="live-indicator" id="liveInd">
-    <div class="live-dot"></div>LIVE
+<!-- ══════════ UPLOAD ══════════ -->
+<div id="screen-upload" class="screen">
+  <div class="app-header">
+    <button class="back-btn" onclick="showScreen('screen-home')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Home
+    </button>
+    <h1>Carica file</h1>
+    <button class="btn-icon" onclick="openSettings()" aria-label="Impostazioni">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
   </div>
-  <div class="live-text" id="liveText">
-    <div class="live-placeholder" id="livePlaceholder">In attesa...</div>
+
+  <div class="upload-body">
+    <input type="file" id="file-input" accept="audio/*,video/*,.mp3,.mp4,.wav,.m4a,.mov,.webm,.ogg,.flac,.aac,.wma" class="hidden" onchange="onFileSelected(this.files[0])">
+
+    <div id="dropzone" class="dropzone" onclick="document.getElementById('file-input').click()" ondrop="onDrop(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)">
+      <div class="drop-icon">📁</div>
+      <strong>Trascina qui il tuo file</strong>
+      <span>oppure tocca per selezionare</span>
+      <div style="margin-top:10px;font-size:.78rem;color:var(--muted)">MP3 &middot; MP4 &middot; WAV &middot; M4A &middot; MOV &middot; WEBM &middot; OGG &middot; FLAC &middot; AAC</div>
+    </div>
+
+    <div id="file-info" class="file-info hidden">
+      <div class="file-info-icon" id="file-info-icon">🎵</div>
+      <div class="file-info-text">
+        <strong id="file-name">—</strong>
+        <span id="file-size">—</span>
+      </div>
+      <button class="btn-icon" onclick="clearFile()" title="Rimuovi" aria-label="Rimuovi file">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div id="progress-box" class="progress-box hidden">
+      <div class="spinner"></div>
+      <div class="progress-label" id="progress-label">Caricamento in corso...</div>
+      <div class="progress-sub">Deepgram nova-3 sta elaborando il tuo file</div>
+      <div class="elapsed" id="upload-elapsed"></div>
+    </div>
+
+    <div id="upload-error" class="hidden" style="background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:14px 16px;font-size:.88rem;color:var(--red);line-height:1.5"></div>
+
+    <button id="btn-transcribe" class="btn btn-primary btn-full hidden" onclick="transcribeFile()">
+      Trascrivi &rarr;
+    </button>
+
+    <button id="btn-cancel-upload" class="btn btn-ghost btn-full hidden" onclick="cancelUpload()">
+      Annulla
+    </button>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- ══════════ RESULT ══════════ -->
+<div id="screen-result" class="screen">
+  <div class="app-header">
+    <button class="back-btn" onclick="showScreen('screen-home')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Home
+    </button>
+    <h1>Risultato</h1>
+    <div class="flex-gap">
+      <button class="btn btn-secondary btn-sm" onclick="downloadTxt()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Scarica
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openAiReview()">
+        &#10024; AI
+      </button>
+    </div>
+  </div>
+
+  <div class="speaker-names" id="speaker-names"></div>
+
+  <div id="result-scroll" class="result-scroll">
+    <div id="result-empty" class="empty-state">
+      <div class="e-icon">📄</div>
+      <p>Nessuna trascrizione disponibile</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL SETTINGS ══════════ -->
+<div id="modal-settings" class="modal-overlay" onclick="closeSettingsOnOverlay(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>Impostazioni</h2>
+      <button class="btn-icon" onclick="closeSettings()" aria-label="Chiudi">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="section-title">API Keys</div>
+      <div class="field">
+        <label>Deepgram API Key</label>
+        <input type="password" id="inp-dg-key" placeholder="dg_xxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>DeepSeek API Key (per revisione AI)</label>
+        <input type="password" id="inp-ds-key" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="section-title" style="margin-top:6px">Preferenze</div>
+      <div class="field">
+        <label>Lingua</label>
+        <select id="inp-lang">
+          <option value="it">Italiano</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="pt">Português</option>
+        </select>
+      </div>
+      <div class="section-title" style="margin-top:6px">Nomi Speaker</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Speaker 1</label>
+          <input type="text" id="sp-0" placeholder="Speaker 1">
+        </div>
+        <div class="field">
+          <label>Speaker 2</label>
+          <input type="text" id="sp-1" placeholder="Speaker 2">
+        </div>
+        <div class="field">
+          <label>Speaker 3</label>
+          <input type="text" id="sp-2" placeholder="Speaker 3">
+        </div>
+        <div class="field">
+          <label>Speaker 4</label>
+          <input type="text" id="sp-3" placeholder="Speaker 4">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-full" onclick="saveSettings()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL AI REVIEW ══════════ -->
+<div id="modal-ai" class="modal-overlay" onclick="closeAiOnOverlay(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>&#10024; Revisione AI</h2>
+      <button class="btn-icon" onclick="closeAiModal()" aria-label="Chiudi">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="ai-loader" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 0">
+        <div class="spinner"></div>
+        <p style="font-size:.9rem;color:var(--muted)">DeepSeek sta revisionando il testo...</p>
+      </div>
+      <div id="ai-result" class="hidden">
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Testo revisionato dall'AI</p>
+        <div class="ai-text" id="ai-text-content"></div>
+      </div>
+    </div>
+    <div class="modal-footer" id="ai-footer" style="display:none">
+      <button class="btn btn-ghost btn-full" onclick="closeAiModal()">Chiudi</button>
+      <button class="btn btn-primary btn-full" onclick="applyAiText()">&#11015; Scarica versione AI</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ WORD POPOVER ══════════ -->
+<div id="word-popover" class="word-popover" role="dialog" aria-label="Correggi parola">
+  <div style="font-size:.78rem;color:var(--muted);font-weight:600">Correggi parola</div>
+  <input type="text" id="popover-input" onkeydown="popoverKey(event)" autocomplete="off" spellcheck="false">
+  <div class="popover-actions">
+    <button class="popover-cancel" onclick="closePopover()">&#10005; Annulla</button>
+    <button class="popover-confirm" onclick="confirmPopover()">&#10003; Conferma</button>
+  </div>
+</div>
+
+<!-- ══════════ TOAST ══════════ -->
+<div id="toast" class="toast" aria-live="polite"></div>
 
 <script>
-// ── State ──────────────────────────────────────────────────
-let socket = null, audioCtx = null, processor = null;
-let micSource = null, micStream = null;
-let recording = false, recStart = null, timerInterval = null;
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+var dgKey = '', dsKey = '', appLang = 'it';
+var spNames = ['Speaker 1','Speaker 2','Speaker 3','Speaker 4'];
+var SP_COLORS = ['#2563eb','#16a34a','#ea580c','#7c3aed'];
 
-let turns = [];            // [{speaker, text, startSec}]
-let liveWords = [];        // words shown in live bar
-let liveSpeaker = 0;
-let lastInterimText = '';  // track changes to animate new words
+// Live state
+var recording = false, socket = null, audioCtx = null, micStream = null;
+var processor = null, sourceNode = null;
+var liveTurns = [], interimBuf = '';
+var recStart = 0, recTimerInterval = null;
 
-// ── Prefs ─────────────────────────────────────────────────
+// Upload state
+var uploadFile = null, uploadAbort = null, elapsedInterval = null;
+
+// Result state
+var resultTurns = [];
+var aiRevisedText = '';
+
+// Popover state
+var popoverWordEl = null, popoverTurnIdx = -1, popoverWordIdx = -1, popoverSrc = 'result';
+
+// ══════════════════════════════════════════════
+//  PREFS
+// ══════════════════════════════════════════════
 function loadPrefs() {
-  const k = localStorage.getItem('dg_key');   if (k) document.getElementById('apiKey').value = k;
-  const l = localStorage.getItem('dg_lang');  if (l) document.getElementById('langSelect').value = l;
-  for (let i = 0; i < 4; i++) {
-    const n = localStorage.getItem(`sp_name_${i}`);
-    if (n) document.getElementById(`name${i}`).value = n;
+  dgKey = localStorage.getItem('dg_key') || '';
+  dsKey = localStorage.getItem('ds_key') || '';
+  appLang = localStorage.getItem('app_lang') || 'it';
+  for (var i = 0; i < 4; i++) {
+    spNames[i] = localStorage.getItem('sp_name_' + i) || ('Speaker ' + (i + 1));
   }
 }
-function saveNames() {
-  for (let i = 0; i < 4; i++)
-    localStorage.setItem(`sp_name_${i}`, document.getElementById(`name${i}`).value);
+
+function saveSettings() {
+  dgKey = document.getElementById('inp-dg-key').value.trim();
+  dsKey = document.getElementById('inp-ds-key').value.trim();
+  appLang = document.getElementById('inp-lang').value;
+  localStorage.setItem('dg_key', dgKey);
+  localStorage.setItem('ds_key', dsKey);
+  localStorage.setItem('app_lang', appLang);
+  for (var i = 0; i < 4; i++) {
+    spNames[i] = document.getElementById('sp-' + i).value.trim() || ('Speaker ' + (i + 1));
+    localStorage.setItem('sp_name_' + i, spNames[i]);
+  }
+  closeSettings();
+  showToast('Impostazioni salvate');
+  if (resultTurns.length) renderSpeakerNames();
 }
-function getName(i) {
-  return document.getElementById(`name${Math.min(i,3)}`)?.value.trim() || `Speaker ${i+1}`;
+
+function openSettings() {
+  loadPrefs();
+  document.getElementById('inp-dg-key').value = dgKey;
+  document.getElementById('inp-ds-key').value = dsKey;
+  document.getElementById('inp-lang').value = appLang;
+  for (var i = 0; i < 4; i++) document.getElementById('sp-' + i).value = spNames[i];
+  document.getElementById('modal-settings').classList.add('open');
 }
 
-// ── Recording ──────────────────────────────────────────────
-function toggleRecording() { recording ? stopRecording() : startRecording(); }
+function closeSettings() {
+  document.getElementById('modal-settings').classList.remove('open');
+}
 
-async function startRecording() {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) { toast('Inserisci la Deepgram API Key!'); return; }
-  localStorage.setItem('dg_key', apiKey);
-  localStorage.setItem('dg_lang', document.getElementById('langSelect').value);
+function closeSettingsOnOverlay(e) {
+  if (e.target === document.getElementById('modal-settings')) closeSettings();
+}
 
-  try {
-    // echoCancellation + noiseSuppression sono CRITICI con il vivavoce
-    micStream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      video: false
-    });
-  } catch (e) { setStatus('Microfono non disponibile: ' + e.message, 'err'); return; }
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
 
-  // Read native sample rate first — iOS Safari ignores sampleRate constraints
-  audioCtx = new AudioContext();
-  await audioCtx.resume();
-  const sr = audioCtx.sampleRate;
+function goLive() {
+  if (!dgKey) { openSettings(); showToast('Inserisci prima la Deepgram API Key'); return; }
+  showScreen('screen-live');
+}
 
-  const lang = document.getElementById('langSelect').value;
-  const params = new URLSearchParams({
-    model: 'nova-3', language: lang,
-    diarize: 'true', punctuate: 'true', smart_format: 'true',
-    interim_results: 'true', no_delay: 'true',
-    utterance_end_ms: '800',
-    encoding: 'linear16', sample_rate: String(Math.round(sr)), channels: '1',
+function goUpload() {
+  if (!dgKey) { openSettings(); showToast('Inserisci prima la Deepgram API Key'); return; }
+  showScreen('screen-upload');
+}
+
+function stopAndGoHome() {
+  if (recording) stopLive();
+  showScreen('screen-home');
+}
+
+// ══════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════
+function fmt(sec) {
+  var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function fmtSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+  return (b/1024/1024).toFixed(1) + ' MB';
+}
+
+function showToast(msg, dur) {
+  dur = dur || 2500;
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, dur);
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════
+//  LIVE RECORDING
+// ══════════════════════════════════════════════
+function startLive() {
+  if (!dgKey) { openSettings(); return; }
+  navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    video: false
+  }).then(function(stream) {
+    micStream = stream;
+    initAudioPipeline();
+  }).catch(function(e) {
+    showToast('Impossibile accedere al microfono: ' + e.message);
   });
-
-  socket = new WebSocket(`wss://api.deepgram.com/v1/listen?${params}`, ['token', apiKey]);
-  socket.binaryType = 'arraybuffer';
-
-  socket.onopen = () => {
-    recording = true; recStart = Date.now();
-    setStatus(`Connesso — ${Math.round(sr/1000)}kHz, eco cancellato`, 'live');
-    setBtnStop(); startTimer(); startAudio();
-    document.getElementById('liveInd').classList.add('visible');
-    document.getElementById('livePlaceholder').textContent = 'Parla...';
-  };
-
-  socket.onmessage = (ev) => {
-    let d; try { d = JSON.parse(ev.data); } catch { return; }
-    if (d.type !== 'Results') return;
-    const alt = d.channel?.alternatives?.[0];
-    if (!alt) return;
-    const transcript = alt.transcript?.trim();
-    if (!transcript) return;
-
-    const words = alt.words || [];
-    const spk   = words.length > 0 ? (words[0].speaker ?? 0) : liveSpeaker;
-
-    if (d.is_final) {
-      pushTurn(spk, transcript, d.start ?? 0);
-      clearLive();
-      redrawAll();
-    } else {
-      showLive(spk, transcript);
-    }
-  };
-
-  socket.onerror = () => setStatus('Errore connessione', 'err');
-  socket.onclose = (ev) => {
-    if (recording) { setStatus(`Chiuso (${ev.code})`, 'err'); stopRecording(); }
-  };
 }
 
-function startAudio() {
-  micSource = audioCtx.createMediaStreamSource(micStream);
-  processor  = audioCtx.createScriptProcessor(4096, 1, 1);
-  processor.onaudioprocess = (e) => {
-    if (!recording || socket?.readyState !== WebSocket.OPEN) return;
+function initAudioPipeline() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume().then(function() {
+    var sr = audioCtx.sampleRate;
+    var params = new URLSearchParams({
+      model: 'nova-3', language: appLang,
+      diarize: 'true', punctuate: 'true', smart_format: 'true',
+      interim_results: 'true', no_delay: 'true',
+      utterance_end_ms: '800',
+      encoding: 'linear16', sample_rate: String(Math.round(sr)), channels: '1'
+    });
+
+    socket = new WebSocket('wss://api.deepgram.com/v1/listen?' + params, ['token', dgKey]);
+    socket.binaryType = 'arraybuffer';
+
+    socket.onopen = function() {
+      recording = true;
+      liveTurns = []; interimBuf = '';
+      // Clear live scroll
+      var scroll = document.getElementById('live-scroll');
+      scroll.innerHTML = '';
+      document.getElementById('rec-badge').classList.remove('hidden');
+      document.getElementById('btn-start-live').classList.add('hidden');
+      document.getElementById('btn-stop-live').classList.remove('hidden');
+      document.getElementById('live-dot').style.opacity = '1';
+      document.getElementById('live-interim').textContent = 'In ascolto...';
+      document.getElementById('live-interim').classList.remove('has-text');
+      document.getElementById('live-title').textContent = 'Registrazione';
+      recStart = Date.now();
+      recTimerInterval = setInterval(updateRecTimer, 1000);
+      window._keepAlive = setInterval(function(){
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      }, 750);
+      setupScriptProcessor();
+    };
+
+    socket.onmessage = onSocketMessage;
+    socket.onerror = function() { showToast('Errore connessione Deepgram'); };
+    socket.onclose = function(ev) {
+      if (recording && ev.code !== 1000) showToast('Connessione persa: ' + ev.code);
+    };
+  });
+}
+
+function setupScriptProcessor() {
+  sourceNode = audioCtx.createMediaStreamSource(micStream);
+  processor = audioCtx.createScriptProcessor(4096, 1, 1);
+  processor.onaudioprocess = function(e) {
+    if (!recording || !socket || socket.readyState !== WebSocket.OPEN) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    const f32 = e.inputBuffer.getChannelData(0);
-    const i16 = new Int16Array(f32.length);
-    for (let i = 0; i < f32.length; i++) {
-      const s = Math.max(-1, Math.min(1, f32[i]));
+    var f32 = e.inputBuffer.getChannelData(0);
+    var i16 = new Int16Array(f32.length);
+    for (var i = 0; i < f32.length; i++) {
+      var s = Math.max(-1, Math.min(1, f32[i]));
       i16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
     }
     socket.send(i16.buffer);
   };
-  micSource.connect(processor);
+  sourceNode.connect(processor);
   processor.connect(audioCtx.destination);
-
-  window._keepAlive = setInterval(() => {
-    if (audioCtx?.state === 'suspended') audioCtx.resume();
-  }, 750);
+  document.addEventListener('touchstart', iosResume, { passive: true });
+  document.addEventListener('visibilitychange', iosVisibility);
 }
 
-document.addEventListener('touchstart', () => {
-  if (audioCtx?.state === 'suspended') audioCtx.resume();
-}, { passive: true });
+function iosResume() { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
+function iosVisibility() { if (!document.hidden && audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
 
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && audioCtx?.state === 'suspended') audioCtx.resume();
-});
+function onSocketMessage(ev) {
+  var msg;
+  try { msg = JSON.parse(ev.data); } catch(e) { return; }
+  if (msg.type !== 'Results') return;
+  var alt = msg.channel && msg.channel.alternatives && msg.channel.alternatives[0];
+  if (!alt) return;
+  var words = alt.words || [];
+  var isFinal = msg.is_final;
+  var transcript = alt.transcript || '';
 
-function stopRecording() {
-  recording = false;
-  clearInterval(timerInterval); clearInterval(window._keepAlive);
-  document.getElementById('timer').textContent = '';
-  document.getElementById('liveInd').classList.remove('visible');
-  document.getElementById('livePlaceholder').textContent = 'In attesa...';
-  try { micSource?.disconnect(); }  catch {}
-  try { processor?.disconnect(); }  catch {}
-  try { audioCtx?.close(); }        catch {}
-  try { micStream?.getTracks().forEach(t => t.stop()); } catch {}
-  try { if (socket?.readyState === WebSocket.OPEN) socket.close(); } catch {}
-  clearLive();
-  setStatus('Registrazione terminata');
-  setBtnStart();
-}
-
-// ── Live bar ───────────────────────────────────────────────
-function showLive(speaker, text) {
-  const liveDiv = document.getElementById('liveText');
-  const placeholder = document.getElementById('livePlaceholder');
-  placeholder.style.display = 'none';
-
-  liveSpeaker = speaker;
-
-  // Animate only new words compared to last interim
-  const newWords = text.split(' ');
-  const oldWords = lastInterimText ? lastInterimText.split(' ') : [];
-  lastInterimText = text;
-
-  // Rebuild live display
-  liveDiv.innerHTML = '';
-
-  // Speaker label
-  const spLabel = document.createElement('div');
-  spLabel.className = 'live-speaker';
-  spLabel.style.color = `var(--s${Math.min(speaker,3)})`;
-  spLabel.textContent = getName(speaker);
-  liveDiv.appendChild(spLabel);
-
-  const wordsRow = document.createElement('div');
-  wordsRow.className = 'live-words';
-
-  newWords.forEach((word, i) => {
-    const span = document.createElement('span');
-    span.className = 'live-word';
-    // Only animate words that are new (not in previous interim)
-    if (i >= oldWords.length || oldWords[i] !== word) {
-      span.style.animation = 'word-in 0.12s ease-out';
-    } else {
-      span.style.animation = 'none';
+  if (!isFinal) {
+    var el = document.getElementById('live-interim');
+    if (transcript) {
+      el.textContent = transcript;
+      el.classList.add('has-text');
     }
-    span.textContent = (i > 0 ? ' ' : '') + word;
-    wordsRow.appendChild(span);
-  });
-
-  const cursor = document.createElement('span');
-  cursor.className = 'live-cursor';
-  wordsRow.appendChild(cursor);
-
-  liveDiv.appendChild(wordsRow);
-}
-
-function clearLive() {
-  lastInterimText = '';
-  liveWords = [];
-  const liveDiv = document.getElementById('liveText');
-  liveDiv.innerHTML = '<div class="live-placeholder" id="livePlaceholder">Parla...</div>';
-}
-
-// ── Confirmed turns ────────────────────────────────────────
-function pushTurn(speaker, text, startSec) {
-  const last = turns[turns.length - 1];
-  if (last && last.speaker === speaker) {
-    last.text += ' ' + text;
-  } else {
-    turns.push({ speaker, text, startSec });
-  }
-}
-
-function redrawAll() {
-  const scroll = document.getElementById('scroll');
-  const empty  = document.getElementById('empty');
-
-  if (!turns.length) {
-    if (!scroll.contains(empty)) scroll.appendChild(empty);
-    empty.style.display = 'flex';
     return;
   }
 
-  empty.style.display = 'none';
+  if (!transcript.trim()) return;
+  interimBuf = '';
+  var el2 = document.getElementById('live-interim');
+  el2.textContent = 'In ascolto...';
+  el2.classList.remove('has-text');
+
+  if (words.length > 0) addLiveTurn(words);
+}
+
+function addLiveTurn(words) {
+  var segments = [];
+  var cur = null;
+  for (var i = 0; i < words.length; i++) {
+    var w = words[i];
+    var sp = (w.speaker !== undefined && w.speaker !== null) ? w.speaker : 0;
+    if (!cur || cur.speaker !== sp) {
+      cur = { speaker: sp, startSec: w.start || 0, words: [] };
+      segments.push(cur);
+    }
+    cur.words.push({ word: w.word, confidence: (w.confidence !== undefined ? w.confidence : 1), corrected: false });
+  }
+  for (var j = 0; j < segments.length; j++) {
+    liveTurns.push(segments[j]);
+    renderLiveTurnEl(segments[j], liveTurns.length - 1);
+  }
+  scrollLive();
+}
+
+function renderLiveTurnEl(turn, idx) {
+  var scroll = document.getElementById('live-scroll');
+  var div = document.createElement('div');
+  div.className = 'turn';
+  div.id = 'live-turn-' + idx;
+  var spColor = SP_COLORS[turn.speaker % 4];
+  var spName = spNames[turn.speaker] || ('Speaker ' + (turn.speaker + 1));
+  div.innerHTML =
+    '<div class="turn-meta">' +
+      '<span class="speaker-badge" style="background:' + spColor + '">' + escapeHtml(spName) + '</span>' +
+      '<span class="turn-time">' + fmt(turn.startSec) + '</span>' +
+    '</div>' +
+    '<div class="turn-text" id="live-turn-text-' + idx + '">' + renderWords(turn.words, idx, 'live') + '</div>';
+  scroll.appendChild(div);
+}
+
+function scrollLive() {
+  var s = document.getElementById('live-scroll');
+  setTimeout(function(){ s.scrollTop = s.scrollHeight; }, 50);
+}
+
+function updateRecTimer() {
+  var elapsed = Math.floor((Date.now() - recStart) / 1000);
+  document.getElementById('rec-timer').textContent = fmt(elapsed);
+}
+
+function stopLive() {
+  recording = false;
+  clearInterval(recTimerInterval);
+  clearInterval(window._keepAlive);
+  document.removeEventListener('touchstart', iosResume);
+  document.removeEventListener('visibilitychange', iosVisibility);
+  if (socket && socket.readyState === WebSocket.OPEN) socket.close(1000);
+  if (processor) { processor.disconnect(); processor = null; }
+  if (sourceNode) { sourceNode.disconnect(); sourceNode = null; }
+  if (micStream) { micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
+  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  socket = null;
+  document.getElementById('rec-badge').classList.add('hidden');
+  document.getElementById('btn-start-live').classList.remove('hidden');
+  document.getElementById('btn-stop-live').classList.add('hidden');
+  document.getElementById('live-dot').style.opacity = '.3';
+  document.getElementById('live-interim').textContent = 'In attesa...';
+  document.getElementById('live-interim').classList.remove('has-text');
+  document.getElementById('live-title').textContent = 'Pronto';
+
+  if (liveTurns.length > 0) {
+    autoDownload(liveTurns);
+    resultTurns = JSON.parse(JSON.stringify(liveTurns));
+    renderResult();
+    showToast('Trascrizione salvata — apertura risultato...', 2000);
+    setTimeout(function(){ showScreen('screen-result'); }, 1500);
+  } else {
+    showToast('Nessun audio rilevato');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  WORD RENDERING
+// ══════════════════════════════════════════════
+function renderWords(words, turnIdx, source) {
+  var html = '';
+  for (var i = 0; i < words.length; i++) {
+    var w = words[i];
+    var isLow = w.confidence < 0.85 && !w.corrected;
+    var isCorrected = w.corrected;
+    var cls = 'word-span';
+    if (isLow) cls += ' low-conf';
+    if (isCorrected) cls += ' corrected';
+    var attrs = ' data-turn="' + turnIdx + '" data-word="' + i + '" data-src="' + source + '"';
+    var click = '';
+    var title = '';
+    if (isLow) {
+      title = ' title="Confidence: ' + Math.round(w.confidence*100) + '% — tocca per correggere"';
+      click = ' onclick="openPopover(this,' + turnIdx + ',' + i + ',\'' + source + '\')"';
+    } else if (isCorrected) {
+      click = ' onclick="openPopover(this,' + turnIdx + ',' + i + ',\'' + source + '\')"';
+    }
+    html += '<span class="' + cls + '"' + attrs + title + click + '>' + escapeHtml(w.word) + ' </span>';
+  }
+  return html;
+}
+
+// ══════════════════════════════════════════════
+//  UPLOAD
+// ══════════════════════════════════════════════
+function onDrop(e) {
+  e.preventDefault();
+  onDragLeave(e);
+  var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (file) onFileSelected(file);
+}
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.add('dragover');
+}
+function onDragLeave(e) {
+  document.getElementById('dropzone').classList.remove('dragover');
+}
+
+function onFileSelected(file) {
+  if (!file) return;
+  uploadFile = file;
+  var type = file.type.split('/')[0];
+  document.getElementById('file-info-icon').textContent = type === 'video' ? '🎬' : '🎵';
+  document.getElementById('file-name').textContent = file.name;
+  document.getElementById('file-size').textContent = fmtSize(file.size);
+  document.getElementById('file-info').classList.remove('hidden');
+  document.getElementById('dropzone').classList.add('hidden');
+  document.getElementById('btn-transcribe').classList.remove('hidden');
+  document.getElementById('upload-error').classList.add('hidden');
+}
+
+function clearFile() {
+  uploadFile = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('file-info').classList.add('hidden');
+  document.getElementById('dropzone').classList.remove('hidden');
+  document.getElementById('btn-transcribe').classList.add('hidden');
+  document.getElementById('upload-error').classList.add('hidden');
+}
+
+function setUploadProgress(show, label) {
+  var pb = document.getElementById('progress-box');
+  var bt = document.getElementById('btn-transcribe');
+  var bc = document.getElementById('btn-cancel-upload');
+  var fi = document.getElementById('file-info');
+  var dz = document.getElementById('dropzone');
+  if (show) {
+    pb.classList.remove('hidden');
+    bt.classList.add('hidden');
+    bc.classList.remove('hidden');
+    fi.classList.add('hidden');
+    dz.classList.add('hidden');
+    if (label) document.getElementById('progress-label').textContent = label;
+  } else {
+    pb.classList.add('hidden');
+    bc.classList.add('hidden');
+  }
+}
+
+function cancelUpload() {
+  if (uploadAbort) uploadAbort.abort();
+  clearInterval(elapsedInterval);
+  setUploadProgress(false);
+  if (uploadFile) {
+    document.getElementById('file-info').classList.remove('hidden');
+    document.getElementById('btn-transcribe').classList.remove('hidden');
+  } else {
+    document.getElementById('dropzone').classList.remove('hidden');
+  }
+}
+
+function transcribeFile() {
+  if (!uploadFile) return;
+  if (!dgKey) { openSettings(); showToast('Inserisci la Deepgram API Key'); return; }
+
+  setUploadProgress(true, 'Caricamento e analisi in corso...');
+  var t0 = Date.now();
+  elapsedInterval = setInterval(function() {
+    var s = Math.floor((Date.now()-t0)/1000);
+    document.getElementById('upload-elapsed').textContent = 'Tempo: ' + fmt(s);
+  }, 1000);
+
+  uploadAbort = new AbortController();
+  var params = new URLSearchParams({
+    model: 'nova-3', language: appLang,
+    diarize: 'true', punctuate: 'true', smart_format: 'true'
+  });
+
+  var contentType = uploadFile.type;
+  if (!contentType || contentType === 'application/octet-stream') contentType = 'audio/mpeg';
+
+  fetch('https://api.deepgram.com/v1/listen?' + params, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Token ' + dgKey,
+      'Content-Type': contentType
+    },
+    body: uploadFile,
+    signal: uploadAbort.signal
+  }).then(function(resp) {
+    if (!resp.ok) {
+      return resp.text().then(function(txt) {
+        throw new Error('Deepgram error ' + resp.status + ': ' + txt.slice(0,200));
+      });
+    }
+    return resp.json();
+  }).then(function(data) {
+    clearInterval(elapsedInterval);
+    setUploadProgress(false);
+    var words = data && data.results && data.results.channels &&
+                data.results.channels[0] && data.results.channels[0].alternatives &&
+                data.results.channels[0].alternatives[0] &&
+                data.results.channels[0].alternatives[0].words;
+    if (!words || !words.length) {
+      showError('Nessuna trascrizione ottenuta. Verifica che il file contenga audio parlato chiaro.');
+      document.getElementById('file-info').classList.remove('hidden');
+      document.getElementById('btn-transcribe').classList.remove('hidden');
+      return;
+    }
+    resultTurns = groupWordsTurns(words);
+    autoDownload(resultTurns);
+    renderResult();
+    showScreen('screen-result');
+  }).catch(function(e) {
+    clearInterval(elapsedInterval);
+    setUploadProgress(false);
+    if (e.name === 'AbortError') return;
+    showError('Errore: ' + e.message);
+    if (uploadFile) {
+      document.getElementById('file-info').classList.remove('hidden');
+      document.getElementById('btn-transcribe').classList.remove('hidden');
+    }
+  });
+}
+
+function showError(msg) {
+  var el = document.getElementById('upload-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function groupWordsTurns(words) {
+  var turns = [];
+  var cur = null;
+  for (var i = 0; i < words.length; i++) {
+    var w = words[i];
+    var sp = (w.speaker !== undefined && w.speaker !== null) ? w.speaker : 0;
+    var lastEnd = cur ? (cur._lastEnd || 0) : 0;
+    var gap = w.start - lastEnd;
+    var sameSpeaker = cur && cur.speaker === sp;
+    if (!cur || !sameSpeaker || gap > 2.0) {
+      cur = { speaker: sp, startSec: w.start || 0, words: [], _lastEnd: w.end || w.start };
+      turns.push(cur);
+    }
+    cur.words.push({ word: w.word, confidence: (w.confidence !== undefined ? w.confidence : 1), corrected: false });
+    cur._lastEnd = w.end || w.start;
+  }
+  return turns;
+}
+
+// ══════════════════════════════════════════════
+//  RESULT SCREEN
+// ══════════════════════════════════════════════
+function renderResult() {
+  renderSpeakerNames();
+  var scroll = document.getElementById('result-scroll');
   scroll.innerHTML = '';
-
-  turns.forEach(t => scroll.appendChild(makeTurnEl(t)));
-  scroll.scrollTop = scroll.scrollHeight;
+  if (!resultTurns.length) {
+    scroll.innerHTML = '<div class="empty-state"><div class="e-icon">📄</div><p>Nessuna trascrizione disponibile</p></div>';
+    return;
+  }
+  for (var i = 0; i < resultTurns.length; i++) {
+    var turn = resultTurns[i];
+    var spColor = SP_COLORS[turn.speaker % 4];
+    var spName = spNames[turn.speaker] || ('Speaker ' + (turn.speaker + 1));
+    var div = document.createElement('div');
+    div.className = 'turn';
+    div.id = 'result-turn-' + i;
+    div.innerHTML =
+      '<div class="turn-meta">' +
+        '<span class="speaker-badge" style="background:' + spColor + '">' + escapeHtml(spName) + '</span>' +
+        '<span class="turn-time">' + fmt(turn.startSec) + '</span>' +
+      '</div>' +
+      '<div class="turn-text" id="result-turn-text-' + i + '">' + renderWords(turn.words, i, 'result') + '</div>';
+    scroll.appendChild(div);
+  }
 }
 
-function makeTurnEl(t) {
-  const si = Math.min(t.speaker, 3);
-  const div = document.createElement('div');
-  div.className = `turn sp-${si}`;
-
-  const hdr = document.createElement('div');
-  hdr.className = 'turn-header';
-
-  const badge = document.createElement('span');
-  badge.className = 'turn-badge';
-  badge.textContent = getName(t.speaker);
-
-  const time = document.createElement('span');
-  time.className = 'turn-time';
-  time.textContent = fmt(t.startSec);
-
-  hdr.appendChild(badge);
-  hdr.appendChild(time);
-
-  const body = document.createElement('div');
-  body.className = 'turn-text';
-  body.textContent = t.text;
-
-  div.appendChild(hdr);
-  div.appendChild(body);
-  return div;
+function renderSpeakerNames() {
+  var container = document.getElementById('speaker-names');
+  var speakersUsed = [];
+  var seen = {};
+  for (var i = 0; i < resultTurns.length; i++) {
+    var sp = resultTurns[i].speaker;
+    if (!seen[sp]) { seen[sp] = true; speakersUsed.push(sp); }
+  }
+  container.innerHTML = '';
+  for (var j = 0; j < speakersUsed.length; j++) {
+    var sp2 = speakersUsed[j];
+    var wrap = document.createElement('div');
+    wrap.className = 'sp-name-wrap';
+    var dot = document.createElement('div');
+    dot.className = 'sp-dot';
+    dot.style.background = SP_COLORS[sp2 % 4];
+    var inp = document.createElement('input');
+    inp.className = 'sp-name-input';
+    inp.type = 'text';
+    inp.value = spNames[sp2] || ('Speaker ' + (sp2+1));
+    inp.dataset.sp = sp2;
+    (function(spIdx, inputEl) {
+      inputEl.onchange = function() {
+        spNames[spIdx] = inputEl.value.trim() || ('Speaker ' + (spIdx+1));
+        localStorage.setItem('sp_name_' + spIdx, spNames[spIdx]);
+        renderResult();
+      };
+    })(sp2, inp);
+    wrap.appendChild(dot);
+    wrap.appendChild(inp);
+    container.appendChild(wrap);
+  }
 }
 
-function fmt(sec) {
-  return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(Math.floor(sec%60)).padStart(2,'0')}`;
+// ══════════════════════════════════════════════
+//  WORD POPOVER
+// ══════════════════════════════════════════════
+function openPopover(el, turnIdx, wordIdx, src) {
+  closePopover();
+  popoverWordEl = el;
+  popoverTurnIdx = turnIdx;
+  popoverWordIdx = wordIdx;
+  popoverSrc = src;
+
+  var turns = src === 'result' ? resultTurns : liveTurns;
+  var word = turns[turnIdx] && turns[turnIdx].words[wordIdx];
+  if (!word) return;
+
+  var pop = document.getElementById('word-popover');
+  document.getElementById('popover-input').value = word.word;
+  pop.classList.add('open');
+
+  var rect = el.getBoundingClientRect();
+  var pw = 190, ph = 115;
+  var top = rect.bottom + 6;
+  var left = rect.left;
+  if (left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
+  if (left < 10) left = 10;
+  if (top + ph > window.innerHeight - 10) top = rect.top - ph - 6;
+  pop.style.top = top + 'px';
+  pop.style.left = left + 'px';
+
+  setTimeout(function(){ document.getElementById('popover-input').select(); }, 50);
 }
 
-// ── Export ─────────────────────────────────────────────────
-function getPlain() {
-  return turns.map(t => `[${fmt(t.startSec)}] ${getName(t.speaker)}: ${t.text}`).join('\n\n');
+function confirmPopover() {
+  var inp = document.getElementById('popover-input').value.trim();
+  if (!inp || popoverTurnIdx < 0) { closePopover(); return; }
+  var turns = popoverSrc === 'result' ? resultTurns : liveTurns;
+  var word = turns[popoverTurnIdx] && turns[popoverTurnIdx].words[popoverWordIdx];
+  if (word) {
+    word.word = inp;
+    word.corrected = true;
+    var textElId = (popoverSrc === 'result' ? 'result-turn-text-' : 'live-turn-text-') + popoverTurnIdx;
+    var textEl = document.getElementById(textElId);
+    if (textEl) textEl.innerHTML = renderWords(turns[popoverTurnIdx].words, popoverTurnIdx, popoverSrc);
+  }
+  closePopover();
+  showToast('Parola corretta');
 }
-function copyAll() {
-  if (!turns.length) { toast('Nessun testo'); return; }
-  navigator.clipboard.writeText(getPlain()).then(() => toast('Copiato!'));
+
+function closePopover() {
+  document.getElementById('word-popover').classList.remove('open');
+  popoverWordEl = null; popoverTurnIdx = -1; popoverWordIdx = -1;
 }
-function exportTxt() {
-  if (!turns.length) { toast('Nessun testo'); return; }
-  const d = new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([getPlain()], {type:'text/plain;charset=utf-8'}));
-  a.download = `trascrizione_${d}.txt`;
+
+function popoverKey(e) {
+  if (e.key === 'Enter') confirmPopover();
+  if (e.key === 'Escape') closePopover();
+}
+
+document.addEventListener('click', function(e) {
+  var pop = document.getElementById('word-popover');
+  if (pop.classList.contains('open') && !pop.contains(e.target) && !e.target.classList.contains('word-span')) {
+    closePopover();
+  }
+});
+
+// ══════════════════════════════════════════════
+//  AUTO DOWNLOAD
+// ══════════════════════════════════════════════
+function turnsToText(turns) {
+  return turns.map(function(t) {
+    var spName = spNames[t.speaker] || ('Speaker ' + (t.speaker+1));
+    var words = t.words.map(function(w){ return w.word; }).join(' ');
+    return '[' + fmt(t.startSec) + '] ' + spName + ': ' + words;
+  }).join('\n\n');
+}
+
+function autoDownload(turns) {
+  var text = turnsToText(turns);
+  var date = new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  triggerDownload(text, 'trascrizione_' + date + '.txt');
+}
+
+function downloadTxt() {
+  if (!resultTurns.length) { showToast('Nessun testo da scaricare'); return; }
+  autoDownload(resultTurns);
+  showToast('Download avviato');
+}
+
+function triggerDownload(text, filename) {
+  var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
   a.click();
-}
-function clearAll() {
-  if (turns.length && !confirm('Eliminare la trascrizione?')) return;
-  turns = [];
-  redrawAll();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
-// ── Timer ──────────────────────────────────────────────────
-function startTimer() {
-  timerInterval = setInterval(() => {
-    const s = Math.floor((Date.now() - recStart) / 1000);
-    document.getElementById('timer').textContent =
-      `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-  }, 500);
+// ══════════════════════════════════════════════
+//  AI REVIEW (DeepSeek)
+// ══════════════════════════════════════════════
+function openAiReview() {
+  if (!dsKey) { openSettings(); showToast('Inserisci la DeepSeek API Key'); return; }
+  if (!resultTurns.length) { showToast('Nessun testo da revisionare'); return; }
+
+  document.getElementById('ai-loader').style.display = 'flex';
+  document.getElementById('ai-result').classList.add('hidden');
+  document.getElementById('ai-footer').style.display = 'none';
+  document.getElementById('modal-ai').classList.add('open');
+  aiRevisedText = '';
+
+  var plainText = turnsToText(resultTurns);
+  var systemPrompt = 'Sei un revisore professionale di trascrizioni audio in italiano e inglese.\n' +
+    'Il testo che ricevi è una trascrizione automatica di una conversazione reale.\n' +
+    'Può contenere: parole mal trascritte (errori fonetici), errori grammaticali tipici del parlato automatico, punteggiatura mancante.\n\n' +
+    'Il tuo compito:\n' +
+    '1. Correggi SOLO gli errori evidenti di trascrizione e grammatica\n' +
+    '2. Mantieni il tono parlato naturale — non riscrivere frasi intere\n' +
+    '3. Mantieni i prefissi speaker come "[00:00] Speaker 1:"\n' +
+    '4. Restituisci SOLO il testo corretto, senza spiegazioni o commenti aggiuntivi';
+
+  fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + dsKey
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: plainText }
+      ],
+      temperature: 0.3,
+      max_tokens: 4096
+    })
+  }).then(function(resp) {
+    if (!resp.ok) {
+      return resp.text().then(function(txt) {
+        throw new Error('DeepSeek error ' + resp.status + ': ' + txt.slice(0,200));
+      });
+    }
+    return resp.json();
+  }).then(function(data) {
+    var revised = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '';
+    aiRevisedText = revised;
+    document.getElementById('ai-loader').style.display = 'none';
+    document.getElementById('ai-result').classList.remove('hidden');
+    document.getElementById('ai-footer').style.display = 'flex';
+    document.getElementById('ai-text-content').innerHTML = escapeHtml(revised).replace(/\n/g,'<br>');
+  }).catch(function(e) {
+    document.getElementById('ai-loader').style.display = 'none';
+    document.getElementById('ai-result').classList.remove('hidden');
+    document.getElementById('ai-footer').style.display = 'flex';
+    document.getElementById('ai-text-content').innerHTML = '<span style="color:var(--red)">Errore: ' + escapeHtml(e.message) + '</span>';
+  });
 }
 
-// ── UI ─────────────────────────────────────────────────────
-function setStatus(msg, state) {
-  document.getElementById('statusText').textContent = msg;
-  document.getElementById('statusDot').className = 'status-dot' + (state ? ` ${state}` : '');
-}
-function setBtnStop() {
-  document.getElementById('mainBtn').className = 'btn btn-stop';
-  document.getElementById('mainBtnLabel').textContent = 'Stop';
-}
-function setBtnStart() {
-  document.getElementById('mainBtn').className = 'btn btn-primary';
-  document.getElementById('mainBtnLabel').textContent = 'Inizia';
-}
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), 2500);
+function applyAiText() {
+  if (!aiRevisedText) { closeAiModal(); return; }
+  var date = new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  triggerDownload(aiRevisedText, 'trascrizione_AI_' + date + '.txt');
+  closeAiModal();
+  showToast('Versione AI scaricata');
 }
 
+function closeAiModal() { document.getElementById('modal-ai').classList.remove('open'); }
+function closeAiOnOverlay(e) { if (e.target === document.getElementById('modal-ai')) closeAiModal(); }
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
 loadPrefs();
 </script>
 </body>
