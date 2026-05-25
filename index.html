@@ -621,68 +621,56 @@ function startLive() {
 
 function initAudioPipeline() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  var sr;
-
-  document.getElementById('live-interim').textContent = 'Connessione AssemblyAI...';
+  document.getElementById('live-interim').textContent = 'Connessione...';
   document.getElementById('live-interim').classList.remove('has-text');
 
-  audioCtx.resume()
-    .then(function() {
-      sr = audioCtx.sampleRate;
-      return fetch('https://api.assemblyai.com/v2/realtime/token', {
-        method: 'POST',
-        headers: { 'Authorization': aaiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expires_in: 3600 })
-      });
-    })
-    .then(function(resp) {
-      if (!resp.ok) return resp.text().then(function(t){ throw new Error('Auth ' + resp.status + ': ' + t.slice(0,120)); });
-      return resp.json();
-    })
-    .then(function(tokenData) {
-      var wsUrl = 'wss://api.assemblyai.com/v2/realtime/ws'
-        + '?sample_rate=' + Math.round(sr)
-        + '&token=' + encodeURIComponent(tokenData.token)
-        + '&language_code=' + appLang;
+  audioCtx.resume().then(function() {
+    var sr = audioCtx.sampleRate;
+    var wsUrl = 'wss://api.assemblyai.com/v2/realtime/ws'
+      + '?sample_rate=' + Math.round(sr)
+      + '&token=' + encodeURIComponent(aaiKey)
+      + '&language_code=' + appLang;
 
-      socket = new WebSocket(wsUrl);
-      socket.binaryType = 'arraybuffer';
+    socket = new WebSocket(wsUrl);
+    socket.binaryType = 'arraybuffer';
 
-      socket.onopen = function() {
-        recording = true;
-        liveTurns = []; interimBuf = '';
-        var scroll = document.getElementById('live-scroll');
-        scroll.innerHTML = '';
-        document.getElementById('rec-badge').classList.remove('hidden');
-        document.getElementById('btn-start-live').classList.add('hidden');
-        document.getElementById('btn-stop-live').classList.remove('hidden');
-        document.getElementById('live-dot').style.opacity = '1';
-        document.getElementById('live-interim').textContent = 'In ascolto...';
-        document.getElementById('live-interim').classList.remove('has-text');
-        document.getElementById('live-title').textContent = 'Registrazione';
-        recStart = Date.now();
-        recTimerInterval = setInterval(updateRecTimer, 1000);
-        window._keepAlive = setInterval(function(){
-          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        }, 750);
-        setupScriptProcessor();
-      };
+    socket.onopen = function() {
+      recording = true;
+      liveTurns = []; interimBuf = '';
+      var scroll = document.getElementById('live-scroll');
+      scroll.innerHTML = '';
+      document.getElementById('rec-badge').classList.remove('hidden');
+      document.getElementById('btn-start-live').classList.add('hidden');
+      document.getElementById('btn-stop-live').classList.remove('hidden');
+      document.getElementById('live-dot').style.opacity = '1';
+      document.getElementById('live-interim').textContent = 'In ascolto...';
+      document.getElementById('live-interim').classList.remove('has-text');
+      document.getElementById('live-title').textContent = 'Registrazione';
+      recStart = Date.now();
+      recTimerInterval = setInterval(updateRecTimer, 1000);
+      window._keepAlive = setInterval(function(){
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      }, 750);
+      setupScriptProcessor();
+    };
 
-      socket.onmessage = onSocketMessage;
-      socket.onerror = function() { showToast('Errore connessione AssemblyAI'); };
-      socket.onclose = function(ev) {
-        if (recording && ev.code !== 1000 && ev.code !== 4000) showToast('Connessione persa (cod. ' + ev.code + ')');
-      };
-    })
-    .catch(function(e) {
-      if (audioCtx) { audioCtx.close(); audioCtx = null; }
-      if (micStream) { micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
-      micStream = null;
-      showToast('Errore avvio: ' + e.message, 4000);
-      document.getElementById('btn-start-live').classList.remove('hidden');
-      document.getElementById('btn-stop-live').classList.add('hidden');
-      document.getElementById('live-interim').textContent = 'In attesa...';
-    });
+    socket.onmessage = onSocketMessage;
+    socket.onerror = function(ev) {
+      showToast('Connessione fallita — verifica API Key', 3500);
+    };
+    socket.onclose = function(ev) {
+      if (recording && ev.code !== 1000 && ev.code !== 4000) {
+        showToast('Connessione persa (cod. ' + ev.code + ')');
+      }
+    };
+  }).catch(function(e) {
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    if (micStream) { micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
+    showToast('Errore audio: ' + e.message, 4000);
+    document.getElementById('btn-start-live').classList.remove('hidden');
+    document.getElementById('btn-stop-live').classList.add('hidden');
+    document.getElementById('live-interim').textContent = 'In attesa...';
+  });
 }
 
 function setupScriptProcessor() {
@@ -937,11 +925,13 @@ function transcribeFile() {
   }).then(function(upData) {
     document.getElementById('progress-label').textContent = 'Trascrizione in corso...';
     // Step 2: submit transcript
-    var langCode = appLang === 'it' ? 'it' : appLang === 'en' ? 'en' : appLang === 'es' ? 'es' : appLang === 'fr' ? 'fr' : appLang === 'de' ? 'de' : appLang === 'pt' ? 'pt' : 'it';
+    var langCode = ['it','en','es','de','fr','pt'].indexOf(appLang) >= 0 ? appLang : 'it';
+    var speechModels = ['it','en','es','de','fr','pt'].indexOf(langCode) >= 0
+      ? ['universal-3-pro'] : ['universal-2'];
     return fetch('https://api.assemblyai.com/v2/transcript', {
       method: 'POST',
       headers: { 'Authorization': aaiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ audio_url: upData.upload_url, speaker_labels: true, language_code: langCode }),
+      body: JSON.stringify({ audio_url: upData.upload_url, speaker_labels: true, language_code: langCode, speech_models: speechModels }),
       signal: signal
     });
   }).then(function(resp) {
