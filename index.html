@@ -248,7 +248,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSys
     </button>
     <h1 id="live-title">Pronto</h1>
     <div class="flex-gap">
-      <div id="rec-badge" class="rec-badge hidden"><span class="dot"></span>REC <span id="rec-timer">00:00</span></div>
+      <div id="rec-badge" class="rec-badge hidden"><span class="dot"></span>REC <span id="rec-timer">00:00</span><span id="live-cost" style="margin-left:8px;font-weight:500;opacity:.85">$0.000</span></div>
       <button class="btn-icon" onclick="openSettings()" aria-label="Impostazioni">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
@@ -349,6 +349,9 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSys
     </div>
   </div>
 
+  <div id="result-cost-bar" class="hidden" style="background:#f0fdf4;border-bottom:1px solid #bbf7d0;padding:8px 20px;font-size:.82rem;color:#15803d;display:flex;gap:16px;flex-wrap:wrap;flex-shrink:0">
+    <span id="result-cost-text"></span>
+  </div>
   <div class="speaker-names" id="speaker-names"></div>
 
   <div id="result-scroll" class="result-scroll">
@@ -552,29 +555,39 @@ function stopAndGoHome() {
 // ══════════════════════════════════════════════
 //  STATS / DASHBOARD
 // ══════════════════════════════════════════════
-// AssemblyAI Universal-3 Pro pricing: ~$0.65/hr for supported langs
-var COST_PER_MIN = 0.0108;
+function showResultCost(durSec, cost, mode) {
+  var bar = document.getElementById('result-cost-bar');
+  var txt = document.getElementById('result-cost-text');
+  var h = Math.floor(durSec / 3600), m = Math.floor((durSec % 3600) / 60), s = durSec % 60;
+  var durStr = h > 0 ? h + 'h ' + m + 'min' : m > 0 ? m + 'min ' + s + 'sec' : s + 'sec';
+  txt.textContent = '⏱ Durata: ' + durStr
+    + ' · 💰 Costo stimato: $' + cost.toFixed(4)
+    + ' (' + (mode === 'streaming' ? '$0.45/h streaming' : '$0.21/h pre-registrato') + ')';
+  bar.classList.remove('hidden');
+  bar.style.display = 'flex';
+}
 
-function recordStats(durationSec) {
-  var mins = durationSec / 60;
+function recordStats(durationSec, cost) {
   var prevCount = parseInt(localStorage.getItem('stat_count') || '0');
-  var prevMins = parseFloat(localStorage.getItem('stat_mins') || '0');
+  var prevSecs = parseFloat(localStorage.getItem('stat_secs') || '0');
+  var prevCost = parseFloat(localStorage.getItem('stat_cost') || '0');
   localStorage.setItem('stat_count', prevCount + 1);
-  localStorage.setItem('stat_mins', (prevMins + mins).toFixed(2));
+  localStorage.setItem('stat_secs', (prevSecs + durationSec).toFixed(0));
+  localStorage.setItem('stat_cost', (prevCost + (cost || 0)).toFixed(4));
   renderStats();
 }
 
 function renderStats() {
   var count = parseInt(localStorage.getItem('stat_count') || '0');
-  var totalMins = parseFloat(localStorage.getItem('stat_mins') || '0');
-  var cost = totalMins * COST_PER_MIN;
-  var h = Math.floor(totalMins / 60);
-  var m = Math.floor(totalMins % 60);
+  var totalSecs = parseFloat(localStorage.getItem('stat_secs') || '0');
+  var totalCost = parseFloat(localStorage.getItem('stat_cost') || '0');
+  var h = Math.floor(totalSecs / 3600);
+  var m = Math.floor((totalSecs % 3600) / 60);
   var card = document.getElementById('stats-card');
   if (count > 0) card.classList.remove('hidden');
   document.getElementById('stat-count').textContent = count;
   document.getElementById('stat-time').textContent = h + ':' + String(m).padStart(2,'0');
-  document.getElementById('stat-cost').textContent = '$' + cost.toFixed(2);
+  document.getElementById('stat-cost').textContent = '$' + totalCost.toFixed(2);
 }
 
 // ══════════════════════════════════════════════
@@ -624,53 +637,89 @@ function initAudioPipeline() {
   document.getElementById('live-interim').textContent = 'Connessione...';
   document.getElementById('live-interim').classList.remove('has-text');
 
+  var sr;
   audioCtx.resume().then(function() {
-    var sr = audioCtx.sampleRate;
-    var wsUrl = 'wss://api.assemblyai.com/v2/realtime/ws'
-      + '?sample_rate=' + Math.round(sr)
-      + '&token=' + encodeURIComponent(aaiKey)
-      + '&language_code=' + appLang;
-
-    socket = new WebSocket(wsUrl);
-    socket.binaryType = 'arraybuffer';
-
-    socket.onopen = function() {
-      recording = true;
-      liveTurns = []; interimBuf = '';
-      var scroll = document.getElementById('live-scroll');
-      scroll.innerHTML = '';
-      document.getElementById('rec-badge').classList.remove('hidden');
-      document.getElementById('btn-start-live').classList.add('hidden');
-      document.getElementById('btn-stop-live').classList.remove('hidden');
-      document.getElementById('live-dot').style.opacity = '1';
-      document.getElementById('live-interim').textContent = 'In ascolto...';
-      document.getElementById('live-interim').classList.remove('has-text');
-      document.getElementById('live-title').textContent = 'Registrazione';
-      recStart = Date.now();
-      recTimerInterval = setInterval(updateRecTimer, 1000);
-      window._keepAlive = setInterval(function(){
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      }, 750);
-      setupScriptProcessor();
-    };
-
-    socket.onmessage = onSocketMessage;
-    socket.onerror = function(ev) {
-      showToast('Connessione fallita — verifica API Key', 3500);
-    };
-    socket.onclose = function(ev) {
-      if (recording && ev.code !== 1000 && ev.code !== 4000) {
-        showToast('Connessione persa (cod. ' + ev.code + ')');
-      }
-    };
-  }).catch(function(e) {
-    if (audioCtx) { audioCtx.close(); audioCtx = null; }
-    if (micStream) { micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
-    showToast('Errore audio: ' + e.message, 4000);
-    document.getElementById('btn-start-live').classList.remove('hidden');
-    document.getElementById('btn-stop-live').classList.add('hidden');
-    document.getElementById('live-interim').textContent = 'In attesa...';
+    sr = audioCtx.sampleRate;
+    // Try to get a temp token (correct auth method per AssemblyAI docs)
+    return fetch('https://api.assemblyai.com/v2/realtime/token', {
+      method: 'POST',
+      headers: { 'Authorization': aaiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expires_in: 3600 })
+    });
+  }).then(function(r) {
+    if (!r.ok) return r.text().then(function(t){ throw new Error('token ' + r.status); });
+    return r.json();
+  }).then(function(d) {
+    openLiveSocket(sr, d.token); // proper temp token
+  }).catch(function() {
+    // Token fetch blocked (CORS on iOS) — fall back to direct API key
+    if (sr) openLiveSocket(sr, aaiKey);
+    else {
+      showToast('Errore audio — riprova', 3000);
+      resetLiveUI();
+    }
   });
+}
+
+function openLiveSocket(sr, token) {
+  var url = 'wss://api.assemblyai.com/v2/realtime/ws'
+    + '?sample_rate=' + Math.round(sr)
+    + '&token=' + encodeURIComponent(token)
+    + '&language_code=' + appLang;
+
+  socket = new WebSocket(url);
+  socket.binaryType = 'arraybuffer';
+
+  var wsOpened = false;
+
+  socket.onopen = function() {
+    wsOpened = true;
+    recording = true;
+    liveTurns = []; interimBuf = '';
+    document.getElementById('live-scroll').innerHTML = '';
+    document.getElementById('rec-badge').classList.remove('hidden');
+    document.getElementById('btn-start-live').classList.add('hidden');
+    document.getElementById('btn-stop-live').classList.remove('hidden');
+    document.getElementById('live-dot').style.opacity = '1';
+    document.getElementById('live-interim').textContent = 'In ascolto...';
+    document.getElementById('live-interim').classList.remove('has-text');
+    document.getElementById('live-title').textContent = 'Registrazione';
+    recStart = Date.now();
+    recTimerInterval = setInterval(updateRecTimer, 1000);
+    window._keepAlive = setInterval(function(){
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    }, 750);
+    setupScriptProcessor();
+  };
+
+  socket.onmessage = onSocketMessage;
+  socket.onerror = function() {};
+  socket.onclose = function(ev) {
+    if (!wsOpened) {
+      var hint = ev.code === 4001 || ev.code === 4002 || ev.code === 4003
+        ? 'API Key non autorizzata per lo streaming (cod.' + ev.code + ')'
+        : 'Connessione fallita cod.' + ev.code + ' — riprova';
+      showToast(hint, 5000);
+      resetLiveUI();
+    } else if (recording && ev.code !== 1000 && ev.code !== 4000) {
+      showToast('Connessione persa (cod.' + ev.code + ')');
+    }
+  };
+}
+
+function resetLiveUI() {
+  recording = false;
+  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  if (micStream) { micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
+  if (processor) { try{processor.disconnect();}catch(e){} processor = null; }
+  if (sourceNode) { try{sourceNode.disconnect();}catch(e){} sourceNode = null; }
+  clearInterval(recTimerInterval); clearInterval(window._keepAlive);
+  document.getElementById('btn-start-live').classList.remove('hidden');
+  document.getElementById('btn-stop-live').classList.add('hidden');
+  document.getElementById('live-dot').style.opacity = '.3';
+  document.getElementById('live-interim').textContent = 'In attesa...';
+  document.getElementById('live-interim').classList.remove('has-text');
+  document.getElementById('live-title').textContent = 'Pronto';
 }
 
 function setupScriptProcessor() {
@@ -765,37 +814,29 @@ function scrollLive() {
 function updateRecTimer() {
   var elapsed = Math.floor((Date.now() - recStart) / 1000);
   document.getElementById('rec-timer').textContent = fmt(elapsed);
+  var cost = (elapsed / 3600) * 0.45;
+  document.getElementById('live-cost').textContent = '$' + cost.toFixed(3);
 }
 
 function stopLive() {
-  recording = false;
-  clearInterval(recTimerInterval);
-  clearInterval(window._keepAlive);
+  var liveDurSec = recStart ? Math.floor((Date.now() - recStart) / 1000) : 0;
   document.removeEventListener('touchstart', iosResume);
   document.removeEventListener('visibilitychange', iosVisibility);
   if (socket && socket.readyState === WebSocket.OPEN) {
     try { socket.send(JSON.stringify({ terminate_session: true })); } catch(e) {}
     socket.close(1000);
   }
-  if (processor) { processor.disconnect(); processor = null; }
-  if (sourceNode) { sourceNode.disconnect(); sourceNode = null; }
-  if (micStream) { micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
-  if (audioCtx) { audioCtx.close(); audioCtx = null; }
   socket = null;
   document.getElementById('rec-badge').classList.add('hidden');
-  document.getElementById('btn-start-live').classList.remove('hidden');
-  document.getElementById('btn-stop-live').classList.add('hidden');
-  document.getElementById('live-dot').style.opacity = '.3';
-  document.getElementById('live-interim').textContent = 'In attesa...';
-  document.getElementById('live-interim').classList.remove('has-text');
-  document.getElementById('live-title').textContent = 'Pronto';
+  resetLiveUI();
 
   if (liveTurns.length > 0) {
-    var liveDurSec = Math.floor((Date.now() - recStart) / 1000);
+    var liveCost = (liveDurSec / 3600) * 0.45;
     autoDownload(liveTurns);
     resultTurns = JSON.parse(JSON.stringify(liveTurns));
     renderResult();
-    recordStats(liveDurSec);
+    showResultCost(liveDurSec, liveCost, 'streaming');
+    recordStats(liveDurSec, liveCost);
     showToast('Trascrizione salvata — apertura risultato...', 2000);
     setTimeout(function(){ showScreen('screen-result'); }, 1500);
   } else {
@@ -951,10 +992,12 @@ function transcribeFile() {
       return;
     }
     resultTurns = groupWordsTurns(words);
-    var uploadDurSec = Math.floor((Date.now() - t0) / 1000);
+    var audioDurSec = data.audio_duration || Math.floor((Date.now() - t0) / 1000);
+    var uploadCost = (audioDurSec / 3600) * 0.21;
     autoDownload(resultTurns);
     renderResult();
-    recordStats(uploadDurSec);
+    showResultCost(audioDurSec, uploadCost, 'preregistrato');
+    recordStats(audioDurSec, uploadCost);
     showScreen('screen-result');
   }).catch(function(e) {
     clearInterval(elapsedInterval);
