@@ -196,7 +196,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSys
   <div class="home-body">
     <div class="home-tagline">
       Trascrizione perfetta<br>di ogni conversazione
-      <small>Powered by Deepgram nova-3 &middot; Qualità professionale</small>
+      <small>Powered by AssemblyAI &middot; Qualità professionale</small>
     </div>
     <div style="height:8px"></div>
     <div class="cta-card" onclick="goLive()" role="button" tabindex="0">
@@ -297,7 +297,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSys
     <div id="progress-box" class="progress-box hidden">
       <div class="spinner"></div>
       <div class="progress-label" id="progress-label">Caricamento in corso...</div>
-      <div class="progress-sub">Deepgram nova-3 sta elaborando il tuo file</div>
+      <div class="progress-sub">AssemblyAI sta elaborando il tuo file</div>
       <div class="elapsed" id="upload-elapsed"></div>
     </div>
 
@@ -355,8 +355,8 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSys
     <div class="modal-body">
       <div class="section-title">API Keys</div>
       <div class="field">
-        <label>Deepgram API Key</label>
-        <input type="password" id="inp-dg-key" placeholder="dg_xxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+        <label>AssemblyAI API Key</label>
+        <input type="password" id="inp-dg-key" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
       </div>
       <div class="field">
         <label>DeepSeek API Key (per revisione AI)</label>
@@ -444,7 +444,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSys
 // ══════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════
-var dgKey = '', dsKey = '', appLang = 'it';
+var aaiKey = '', dsKey = '', appLang = 'it';
 var spNames = ['Speaker 1','Speaker 2','Speaker 3','Speaker 4'];
 var SP_COLORS = ['#2563eb','#16a34a','#ea580c','#7c3aed'];
 
@@ -468,7 +468,7 @@ var popoverWordEl = null, popoverTurnIdx = -1, popoverWordIdx = -1, popoverSrc =
 //  PREFS
 // ══════════════════════════════════════════════
 function loadPrefs() {
-  dgKey = localStorage.getItem('dg_key') || '';
+  aaiKey = localStorage.getItem('aai_key') || '';
   dsKey = localStorage.getItem('ds_key') || '';
   appLang = localStorage.getItem('app_lang') || 'it';
   for (var i = 0; i < 4; i++) {
@@ -477,10 +477,10 @@ function loadPrefs() {
 }
 
 function saveSettings() {
-  dgKey = document.getElementById('inp-dg-key').value.trim();
+  aaiKey = document.getElementById('inp-dg-key').value.trim();
   dsKey = document.getElementById('inp-ds-key').value.trim();
   appLang = document.getElementById('inp-lang').value;
-  localStorage.setItem('dg_key', dgKey);
+  localStorage.setItem('aai_key', aaiKey);
   localStorage.setItem('ds_key', dsKey);
   localStorage.setItem('app_lang', appLang);
   for (var i = 0; i < 4; i++) {
@@ -494,7 +494,7 @@ function saveSettings() {
 
 function openSettings() {
   loadPrefs();
-  document.getElementById('inp-dg-key').value = dgKey;
+  document.getElementById('inp-dg-key').value = aaiKey;
   document.getElementById('inp-ds-key').value = dsKey;
   document.getElementById('inp-lang').value = appLang;
   for (var i = 0; i < 4; i++) document.getElementById('sp-' + i).value = spNames[i];
@@ -518,12 +518,12 @@ function showScreen(id) {
 }
 
 function goLive() {
-  if (!dgKey) { openSettings(); showToast('Inserisci prima la Deepgram API Key'); return; }
+  if (!aaiKey) { openSettings(); showToast('Inserisci prima la AssemblyAI API Key'); return; }
   showScreen('screen-live');
 }
 
 function goUpload() {
-  if (!dgKey) { openSettings(); showToast('Inserisci prima la Deepgram API Key'); return; }
+  if (!aaiKey) { openSettings(); showToast('Inserisci prima la AssemblyAI API Key'); return; }
   showScreen('screen-upload');
 }
 
@@ -562,7 +562,7 @@ function escapeHtml(s) {
 //  LIVE RECORDING
 // ══════════════════════════════════════════════
 function startLive() {
-  if (!dgKey) { openSettings(); return; }
+  if (!aaiKey) { openSettings(); return; }
   navigator.mediaDevices.getUserMedia({
     audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     video: false
@@ -578,21 +578,14 @@ function initAudioPipeline() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioCtx.resume().then(function() {
     var sr = audioCtx.sampleRate;
-    var params = new URLSearchParams({
-      model: 'nova-3', language: appLang,
-      diarize: 'true', punctuate: 'true', smart_format: 'true',
-      interim_results: 'true', no_delay: 'true',
-      utterance_end_ms: '800',
-      encoding: 'linear16', sample_rate: String(Math.round(sr)), channels: '1'
-    });
+    var wsUrl = 'wss://api.assemblyai.com/v2/realtime/ws?sample_rate=' + Math.round(sr) + '&token=' + encodeURIComponent(aaiKey);
 
-    socket = new WebSocket('wss://api.deepgram.com/v1/listen?' + params, ['token', dgKey]);
+    socket = new WebSocket(wsUrl);
     socket.binaryType = 'arraybuffer';
 
     socket.onopen = function() {
       recording = true;
       liveTurns = []; interimBuf = '';
-      // Clear live scroll
       var scroll = document.getElementById('live-scroll');
       scroll.innerHTML = '';
       document.getElementById('rec-badge').classList.remove('hidden');
@@ -611,9 +604,9 @@ function initAudioPipeline() {
     };
 
     socket.onmessage = onSocketMessage;
-    socket.onerror = function() { showToast('Errore connessione Deepgram'); };
+    socket.onerror = function() { showToast('Errore connessione AssemblyAI'); };
     socket.onclose = function(ev) {
-      if (recording && ev.code !== 1000) showToast('Connessione persa: ' + ev.code);
+      if (recording && ev.code !== 1000 && ev.code !== 4000) showToast('Connessione persa: ' + ev.code);
     };
   });
 }
@@ -644,29 +637,28 @@ function iosVisibility() { if (!document.hidden && audioCtx && audioCtx.state ==
 function onSocketMessage(ev) {
   var msg;
   try { msg = JSON.parse(ev.data); } catch(e) { return; }
-  if (msg.type !== 'Results') return;
-  var alt = msg.channel && msg.channel.alternatives && msg.channel.alternatives[0];
-  if (!alt) return;
-  var words = alt.words || [];
-  var isFinal = msg.is_final;
-  var transcript = alt.transcript || '';
+  var mtype = msg.message_type;
+  if (!mtype) return;
 
-  if (!isFinal) {
+  if (mtype === 'PartialTranscript') {
     var el = document.getElementById('live-interim');
-    if (transcript) {
-      el.textContent = transcript;
+    if (msg.text) {
+      el.textContent = msg.text;
       el.classList.add('has-text');
     }
     return;
   }
 
-  if (!transcript.trim()) return;
-  interimBuf = '';
-  var el2 = document.getElementById('live-interim');
-  el2.textContent = 'In ascolto...';
-  el2.classList.remove('has-text');
-
-  if (words.length > 0) addLiveTurn(words);
+  if (mtype === 'FinalTranscript') {
+    var transcript = msg.text || '';
+    if (!transcript.trim()) return;
+    var el2 = document.getElementById('live-interim');
+    el2.textContent = 'In ascolto...';
+    el2.classList.remove('has-text');
+    var words = msg.words || [];
+    if (words.length > 0) addLiveTurn(words);
+    return;
+  }
 }
 
 function addLiveTurn(words) {
@@ -674,12 +666,11 @@ function addLiveTurn(words) {
   var cur = null;
   for (var i = 0; i < words.length; i++) {
     var w = words[i];
-    var sp = (w.speaker !== undefined && w.speaker !== null) ? w.speaker : 0;
-    if (!cur || cur.speaker !== sp) {
-      cur = { speaker: sp, startSec: w.start || 0, words: [] };
+    if (!cur) {
+      cur = { speaker: 0, startSec: (w.start || 0) / 1000, words: [] };
       segments.push(cur);
     }
-    cur.words.push({ word: w.word, confidence: (w.confidence !== undefined ? w.confidence : 1), corrected: false });
+    cur.words.push({ word: w.text || w.word || '', confidence: (w.confidence !== undefined ? w.confidence : 1), corrected: false });
   }
   for (var j = 0; j < segments.length; j++) {
     liveTurns.push(segments[j]);
@@ -720,7 +711,10 @@ function stopLive() {
   clearInterval(window._keepAlive);
   document.removeEventListener('touchstart', iosResume);
   document.removeEventListener('visibilitychange', iosVisibility);
-  if (socket && socket.readyState === WebSocket.OPEN) socket.close(1000);
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    try { socket.send(JSON.stringify({ terminate_session: true })); } catch(e) {}
+    socket.close(1000);
+  }
   if (processor) { processor.disconnect(); processor = null; }
   if (sourceNode) { sourceNode.disconnect(); sourceNode = null; }
   if (micStream) { micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
@@ -843,9 +837,9 @@ function cancelUpload() {
 
 function transcribeFile() {
   if (!uploadFile) return;
-  if (!dgKey) { openSettings(); showToast('Inserisci la Deepgram API Key'); return; }
+  if (!aaiKey) { openSettings(); showToast('Inserisci la AssemblyAI API Key'); return; }
 
-  setUploadProgress(true, 'Caricamento e analisi in corso...');
+  setUploadProgress(true, 'Caricamento file in corso...');
   var t0 = Date.now();
   elapsedInterval = setInterval(function() {
     var s = Math.floor((Date.now()-t0)/1000);
@@ -853,36 +847,37 @@ function transcribeFile() {
   }, 1000);
 
   uploadAbort = new AbortController();
-  var params = new URLSearchParams({
-    model: 'nova-3', language: appLang,
-    diarize: 'true', punctuate: 'true', smart_format: 'true'
-  });
+  var signal = uploadAbort.signal;
 
-  var contentType = uploadFile.type;
-  if (!contentType || contentType === 'application/octet-stream') contentType = 'audio/mpeg';
-
-  fetch('https://api.deepgram.com/v1/listen?' + params, {
+  // Step 1: upload file
+  fetch('https://api.assemblyai.com/v2/upload', {
     method: 'POST',
-    headers: {
-      'Authorization': 'Token ' + dgKey,
-      'Content-Type': contentType
-    },
+    headers: { 'Authorization': aaiKey, 'Content-Type': 'application/octet-stream' },
     body: uploadFile,
-    signal: uploadAbort.signal
+    signal: signal
   }).then(function(resp) {
-    if (!resp.ok) {
-      return resp.text().then(function(txt) {
-        throw new Error('Deepgram error ' + resp.status + ': ' + txt.slice(0,200));
-      });
-    }
+    if (!resp.ok) return resp.text().then(function(t){ throw new Error('Upload error ' + resp.status + ': ' + t.slice(0,200)); });
     return resp.json();
+  }).then(function(upData) {
+    document.getElementById('progress-label').textContent = 'Trascrizione in corso...';
+    // Step 2: submit transcript
+    var langCode = appLang === 'it' ? 'it' : appLang === 'en' ? 'en' : appLang === 'es' ? 'es' : appLang === 'fr' ? 'fr' : appLang === 'de' ? 'de' : appLang === 'pt' ? 'pt' : 'it';
+    return fetch('https://api.assemblyai.com/v2/transcript', {
+      method: 'POST',
+      headers: { 'Authorization': aaiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audio_url: upData.upload_url, speaker_labels: true, language_code: langCode, speech_model: 'best' }),
+      signal: signal
+    });
+  }).then(function(resp) {
+    if (!resp.ok) return resp.text().then(function(t){ throw new Error('Submit error ' + resp.status + ': ' + t.slice(0,200)); });
+    return resp.json();
+  }).then(function(sub) {
+    // Step 3: poll
+    return pollTranscript(sub.id, signal);
   }).then(function(data) {
     clearInterval(elapsedInterval);
     setUploadProgress(false);
-    var words = data && data.results && data.results.channels &&
-                data.results.channels[0] && data.results.channels[0].alternatives &&
-                data.results.channels[0].alternatives[0] &&
-                data.results.channels[0].alternatives[0].words;
+    var words = data && data.words;
     if (!words || !words.length) {
       showError('Nessuna trascrizione ottenuta. Verifica che il file contenga audio parlato chiaro.');
       document.getElementById('file-info').classList.remove('hidden');
@@ -905,6 +900,25 @@ function transcribeFile() {
   });
 }
 
+function pollTranscript(id, signal) {
+  return new Promise(function(resolve, reject) {
+    function check() {
+      fetch('https://api.assemblyai.com/v2/transcript/' + id, {
+        headers: { 'Authorization': aaiKey },
+        signal: signal
+      }).then(function(resp) {
+        return resp.json();
+      }).then(function(data) {
+        if (data.status === 'completed') { resolve(data); return; }
+        if (data.status === 'error') { reject(new Error('AssemblyAI: ' + (data.error || 'errore sconosciuto'))); return; }
+        document.getElementById('progress-label').textContent = 'Elaborazione in corso (' + (data.status || '...') + ')';
+        setTimeout(check, 4000);
+      }).catch(function(e) { reject(e); });
+    }
+    check();
+  });
+}
+
 function showError(msg) {
   var el = document.getElementById('upload-error');
   el.textContent = msg;
@@ -916,16 +930,23 @@ function groupWordsTurns(words) {
   var cur = null;
   for (var i = 0; i < words.length; i++) {
     var w = words[i];
-    var sp = (w.speaker !== undefined && w.speaker !== null) ? w.speaker : 0;
-    var lastEnd = cur ? (cur._lastEnd || 0) : 0;
-    var gap = w.start - lastEnd;
+    // AssemblyAI speaker is a letter ("A","B",...) or null; convert to number
+    var rawSp = w.speaker;
+    var sp = 0;
+    if (typeof rawSp === 'string' && rawSp.length === 1) sp = rawSp.charCodeAt(0) - 65;
+    else if (typeof rawSp === 'number') sp = rawSp;
+    // timestamps are in ms
+    var startMs = w.start || 0;
+    var endMs = w.end || startMs;
+    var lastEndMs = cur ? (cur._lastEndMs || 0) : 0;
+    var gapMs = startMs - lastEndMs;
     var sameSpeaker = cur && cur.speaker === sp;
-    if (!cur || !sameSpeaker || gap > 2.0) {
-      cur = { speaker: sp, startSec: w.start || 0, words: [], _lastEnd: w.end || w.start };
+    if (!cur || !sameSpeaker || gapMs > 2000) {
+      cur = { speaker: sp, startSec: startMs / 1000, words: [], _lastEndMs: endMs };
       turns.push(cur);
     }
-    cur.words.push({ word: w.word, confidence: (w.confidence !== undefined ? w.confidence : 1), corrected: false });
-    cur._lastEnd = w.end || w.start;
+    cur.words.push({ word: w.text || w.word || '', confidence: (w.confidence !== undefined ? w.confidence : 1), corrected: false });
+    cur._lastEndMs = endMs;
   }
   return turns;
 }
